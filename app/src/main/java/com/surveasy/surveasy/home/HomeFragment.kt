@@ -11,7 +11,6 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -30,23 +29,36 @@ import com.surveasy.surveasy.home.banner.BannerViewPagerAdapter
 import com.surveasy.surveasy.home.contribution.ContributionItemsAdapter
 import com.surveasy.surveasy.home.contribution.HomeContributionViewModel
 import com.bumptech.glide.Glide
+import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.ListResult
+import com.google.firebase.storage.StorageReference
+import com.google.firebase.storage.ktx.storage
 import com.surveasy.surveasy.home.Opinion.HomeOpinionAnswerActivity
-import com.surveasy.surveasy.home.Opinion.HomeOpinionAnswerTitleViewModel
+import com.surveasy.surveasy.home.Opinion.HomeOpinionAnswerViewModel
 import com.surveasy.surveasy.my.history.MyViewHistoryActivity
+import kotlinx.coroutines.*
+import org.json.JSONException
+import org.json.JSONObject
+import java.lang.Runnable
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import org.json.JSONException
-import org.json.JSONObject
+import java.time.LocalDate
 
 
 class HomeFragment : Fragment() {
 
     val db = Firebase.firestore
+    val storage = Firebase.storage
     val userList = arrayListOf<UserSurveyItem>()
     private lateinit var bannerPager : ViewPager2
     private lateinit var mContext: Context
@@ -70,13 +82,11 @@ class HomeFragment : Fragment() {
         val bannerModel by activityViewModels<BannerViewModel>()
         val contributionModel by activityViewModels<HomeContributionViewModel>()
         val opinionModel by activityViewModels<HomeOpinionViewModel>()
-        val answerModel by activityViewModels<HomeOpinionAnswerTitleViewModel>()
+        val answerModel by activityViewModels<HomeOpinionAnswerViewModel>()
         val model by activityViewModels<SurveyInfoViewModel>()
         val current_banner: TextView = view.findViewById(R.id.textView_current_banner)
         val total_banner: TextView = view.findViewById(R.id.textView_total_banner)
 //        val springDotsIndicator: SpringDotsIndicator = view.findViewById(R.id.Home_spring_dots_indicator)
-        //val register: Button = view.findViewById(R.id.HomeToRegister)
-        //val login: Button = view.findViewById(R.id.HomeToLogin)
         val firstSurveyContainer : LinearLayout = view.findViewById(R.id.HomeList_ItemContainer_first)
         val firstSurveyTitle : TextView = view.findViewById(R.id.HomeListItem_Title_first)
         val homeListContainer: RecyclerView = view.findViewById(R.id.homeList_recyclerView)
@@ -111,10 +121,13 @@ class HomeFragment : Fragment() {
 
             }.await()
 
+            bannerDefault.visibility = View.INVISIBLE
             total_banner.text = bannerModel.num.toString()
+            Log.d(TAG, "########coroutine exit1 ${System.currentTimeMillis()}")
             bannerPager.offscreenPageLimit = bannerModel.num
             bannerPager.adapter = BannerViewPagerAdapter(mContext, bannerModel.uriList)
             bannerPager.orientation = ViewPager2.ORIENTATION_HORIZONTAL
+            Log.d(TAG, "########coroutine exit2 ${System.currentTimeMillis()}")
 
         }
 
@@ -259,7 +272,6 @@ class HomeFragment : Fragment() {
                 contributionModel.contributionList
             }.await()
 
-            Log.d(TAG, "+++++++++++ ${contributionList}")
             contributionContainer.layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
             contributionContainer.adapter = ContributionItemsAdapter(contributionList)
 
@@ -273,9 +285,7 @@ class HomeFragment : Fragment() {
                 opinionModel.opinionItem
             }.await()
 
-            Log.d(TAG, "+++++++++++ ${opinionModel.opinionItem.question}")
             opinionTextView.text = opinionModel.opinionItem.question
-
         }
 
         opinionContainer.setOnClickListener {
@@ -284,24 +294,24 @@ class HomeFragment : Fragment() {
             intent.putExtra("question", opinionModel.opinionItem.question)
             intent.putExtra("content1", opinionModel.opinionItem.content1)
             intent.putExtra("content2", opinionModel.opinionItem.content2)
-
             startActivity(intent)
-
 
             // [Amplitude] Poll View Showed
             val client = Amplitude.getInstance()
             client.logEvent("Poll View Showed")
         }
+
+
+
         //null 오류 다시 체크
         CoroutineScope(Dispatchers.Main).launch {
             val list : Int? = CoroutineScope(Dispatchers.IO).async {
-                val model by activityViewModels<HomeOpinionAnswerTitleViewModel>()
+                val model by activityViewModels<HomeOpinionAnswerViewModel>()
                 while (model.homeAnswerList.size == 0) {
                     //Log.d(TAG, "########loading")
                 }
 //                model.homeAnswerList.get(0).id
                 1
-
 
             }.await()
 
@@ -333,6 +343,7 @@ class HomeFragment : Fragment() {
             })
         }
 
+
         opinionAnswerL.setOnClickListener {
             if(answerModel.homeAnswerList.get(left).id!=2){
                 val intent = Intent(context, HomeOpinionAnswerActivity::class.java)
@@ -340,7 +351,9 @@ class HomeFragment : Fragment() {
                 intent.putExtra("content1",answerModel.homeAnswerList.get(left).content1)
                 intent.putExtra("content2",answerModel.homeAnswerList.get(left).content2)
                 intent.putExtra("content3",answerModel.homeAnswerList.get(left).content3)
-                startActivity(intent)
+
+                putAnswerItemNum(intent, answerModel.homeAnswerList.get(left).id)
+
             }
 
 
@@ -348,6 +361,8 @@ class HomeFragment : Fragment() {
             val client = Amplitude.getInstance()
             client.logEvent("Poll_Answer View Showed")
         }
+
+
         opinionAnswerR.setOnClickListener {
             if(answerModel.homeAnswerList.get(right).id!=2){
                 val intent = Intent(context, HomeOpinionAnswerActivity::class.java)
@@ -355,17 +370,14 @@ class HomeFragment : Fragment() {
                 intent.putExtra("content1",answerModel.homeAnswerList.get(right).content1)
                 intent.putExtra("content2",answerModel.homeAnswerList.get(right).content2)
                 intent.putExtra("content3",answerModel.homeAnswerList.get(right).content3)
-                startActivity(intent)
+
+                putAnswerItemNum(intent, answerModel.homeAnswerList.get(right).id)
             }
 
             // [Amplitude] Poll_Answer View Showed
             val client = Amplitude.getInstance()
             client.logEvent("Poll_Answer View Showed")
         }
-
-
-
-
 
             return view
     }
@@ -396,6 +408,16 @@ class HomeFragment : Fragment() {
                     index = -1
                     for (survey in model.surveyInfo) {
                         index++
+                        //homelist 마감 체크
+                        val dueDate = survey.dueDate + " " + survey.dueTimeTime + ":00"
+                        val sf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                        val date = sf.parse(dueDate)
+                        val now = Calendar.getInstance()
+                        val calDate = (date.time - now.time.time) / (60 * 60 * 1000)
+
+                        if(calDate<0){
+                            boolList[index] = true
+                        }
                         if (survey.id.equals(done.id)) {
                             boolList[index] = true
                         }else if(survey.progress >=3){
@@ -429,6 +451,51 @@ class HomeFragment : Fragment() {
 
         }
         return finList
+    }
+    //Coroutine test -ing
+//    private suspend fun getBannerImg(bannerModel : BannerViewModel){
+//        withContext(Dispatchers.IO){
+//            Log.d(TAG, "########coroutine ${print("where")}")
+//            while (bannerModel.uriList.size == 0) {
+//                //bannerDefault.visibility = View.VISIBLE
+//            }
+//        }
+//    }
+//    private suspend fun getHomeList(listModel : SurveyInfoViewModel){
+//        withContext(Dispatchers.IO){
+//            Log.d(TAG, "########coroutine ${print("where2")}")
+//            while (listModel.surveyInfo.size == 0) {
+//                //Log.d(TAG, "########loading")
+//            }
+//        }
+//    }
+//
+//    fun <T>print(msg : T){
+//        kotlin.io.println("$msg [${Thread.currentThread().name}")
+//    }
+
+
+    // 해당 id의 Opinion Answer의 Storage 이미지 개수 불러와서 HomeOpinionAnswerActivity에 전달
+    private fun putAnswerItemNum(intent: Intent, id : Int) {
+        val urlList = ArrayList<String>()
+        CoroutineScope(Dispatchers.Main).launch {
+            val url = CoroutineScope(Dispatchers.IO).async {
+                val storage: FirebaseStorage = FirebaseStorage.getInstance()
+                val storageRef: StorageReference = storage.reference.child("AppOpinionAnswerImage").child(id.toString())
+                val listAllTask: Task<ListResult> = storageRef.listAll()
+
+                var itemNum : Int = 0    // 해당 id의 Answer이 가진 이미지 개수
+                listAllTask.addOnSuccessListener { result ->
+                    result.items.forEach { it ->
+                        itemNum++
+                    }
+
+                    intent.putExtra("itemNum", itemNum)
+                    startActivity(intent)
+                }
+                itemNum
+            }.await()
+        }
     }
 
 

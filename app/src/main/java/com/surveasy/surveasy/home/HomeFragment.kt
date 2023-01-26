@@ -38,6 +38,7 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.ListResult
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
+import com.surveasy.surveasy.databinding.FragmentHomeBinding
 import com.surveasy.surveasy.home.Opinion.HomeOpinionAnswerActivity
 import com.surveasy.surveasy.home.Opinion.HomeOpinionAnswerViewModel
 import com.surveasy.surveasy.my.history.MyViewHistoryActivity
@@ -62,6 +63,8 @@ class HomeFragment : Fragment() {
     val userList = arrayListOf<UserSurveyItem>()
     private lateinit var bannerPager : ViewPager2
     private lateinit var mContext: Context
+    private var _binding : FragmentHomeBinding? = null
+    private val binding get() = _binding!!
     private val userModel by activityViewModels<CurrentUserViewModel>()
     private val bannerModel by activityViewModels<BannerViewModel>()
     private val contributionModel by activityViewModels<HomeContributionViewModel>()
@@ -82,7 +85,9 @@ class HomeFragment : Fragment() {
     ): View? {
         var left = 0
         var right = 1
-        val view = inflater.inflate(R.layout.fragment_home, container, false)
+        _binding = FragmentHomeBinding.inflate(layoutInflater)
+        val view = binding.root
+
         val container : RecyclerView? = view.findViewById(R.id.homeList_recyclerView)
         val contributionContainer : RecyclerView = view.findViewById(R.id.HomeContribution_recyclerView)
         val current_banner: TextView = view.findViewById(R.id.textView_current_banner)
@@ -111,18 +116,18 @@ class HomeFragment : Fragment() {
         bannerPager = view.findViewById(R.id.Home_BannerViewPager)
         val bannerDefault : ImageView = view.findViewById(R.id.Home_BannerDefault)
 
-        Glide.with(this@HomeFragment).load(R.raw.app_loading).into(bannerDefault)
+        Glide.with(this@HomeFragment).load(R.raw.app_loading).into(binding.HomeBannerDefault)
         CoroutineScope(Dispatchers.Main).launch {
             val banner = CoroutineScope(Dispatchers.IO).async {
                 while (bannerModel.uriList.size == 0) {
                     //bannerDefault.visibility = View.VISIBLE
                 }
-                bannerDefault.visibility = View.INVISIBLE
+                binding.HomeBannerDefault.visibility = View.INVISIBLE
                 bannerModel.uriList
 
             }.await()
 
-            bannerDefault.visibility = View.INVISIBLE
+            binding.HomeBannerDefault.visibility = View.INVISIBLE
             total_banner.text = bannerModel.num.toString()
             bannerPager.offscreenPageLimit = bannerModel.num
             bannerPager.adapter = BannerViewPagerAdapter(mContext, bannerModel.uriList)
@@ -377,6 +382,11 @@ class HomeFragment : Fragment() {
         }
 
             return view
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
 

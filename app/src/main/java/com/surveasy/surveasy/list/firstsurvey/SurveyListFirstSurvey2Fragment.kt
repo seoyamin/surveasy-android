@@ -16,6 +16,7 @@ import com.surveasy.surveasy.R
 import com.surveasy.surveasy.login.CurrentUserViewModel
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.surveasy.surveasy.databinding.FragmentSurveylistfirstsurvey2Binding
 import java.util.*
 
 
@@ -25,6 +26,8 @@ class SurveyListFirstSurvey2Fragment() : Fragment() {
     val userModel by activityViewModels<CurrentUserViewModel>()
     val firstSurveyModel by activityViewModels<FirstSurveyViewModel>()
 
+    private var _binding : FragmentSurveylistfirstsurvey2Binding? = null
+    private val binding get() = _binding!!
     private lateinit var districtSpinner : Spinner
     private var city : String? = null
     private var district : String? = null
@@ -39,8 +42,8 @@ class SurveyListFirstSurvey2Fragment() : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-
-        val view = inflater.inflate(R.layout.fragment_surveylistfirstsurvey2,container,false)
+        _binding = FragmentSurveylistfirstsurvey2Binding.inflate(layoutInflater)
+        val view = binding.root
         districtSpinner = view.findViewById(R.id.SurveyListFirstSurvey2_DistrictSpinner)
 
         setCitySpinner(view)
@@ -50,8 +53,7 @@ class SurveyListFirstSurvey2Fragment() : Fragment() {
         setFamilyTypeSpinner(view)
 
         // pet
-        val petRadioGroup = view.findViewById<RadioGroup>(R.id.SurveyListFirstSurvey2_PetRadioGroup)
-        petRadioGroup.setOnCheckedChangeListener { petRadioGroup, checked ->
+        binding.SurveyListFirstSurvey2PetRadioGroup.setOnCheckedChangeListener { petRadioGroup, checked ->
             when(checked) {
                 R.id.SurveyListFirstSurvey2_PetDog -> pet = "반려견"
                 R.id.SurveyListFirstSurvey2_PetCat -> pet = "반려묘"
@@ -61,8 +63,7 @@ class SurveyListFirstSurvey2Fragment() : Fragment() {
         }
 
         // married
-        val marriedRadioGroup = view.findViewById<RadioGroup>(R.id.SurveyListFirstSurvey2_MarriedRadioGroup)
-        marriedRadioGroup.setOnCheckedChangeListener { marriedRadioGroup, checked ->
+        binding.SurveyListFirstSurvey2MarriedRadioGroup.setOnCheckedChangeListener { marriedRadioGroup, checked ->
             when(checked) {
                 R.id.SurveyListFirstSurvey2_MarriedYet -> married = "미혼"
                 R.id.SurveyListFirstSurvey2_Married -> married = "기혼"
@@ -82,8 +83,7 @@ class SurveyListFirstSurvey2Fragment() : Fragment() {
 //            }
 //        }
 
-        val surveyListFirstSurvey2Btn : Button = view.findViewById(R.id.SurveyListFirstSurvey2_Btn)
-        surveyListFirstSurvey2Btn.setOnClickListener{
+        binding.SurveyListFirstSurvey2Btn.setOnClickListener{
             firstSurveyFin()
         }
 
@@ -199,20 +199,18 @@ class SurveyListFirstSurvey2Fragment() : Fragment() {
     private fun setCitySpinner(view: View) {
         val cityList = resources.getStringArray(R.array.city)
         val cityAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, cityList)
-        val citySpinner = view.findViewById<Spinner>(R.id.SurveyListFirstSurvey2_CitySpinner)
-        val districtSpinner = view.findViewById<Spinner>(R.id.SurveyListFirstSurvey2_DistrictSpinner)
 
-        citySpinner.adapter = cityAdapter
-        citySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+        binding.SurveyListFirstSurvey2CitySpinner.adapter = cityAdapter
+        binding.SurveyListFirstSurvey2CitySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 city = cityList[position]
                 if(position == 8) {
-                    districtSpinner.visibility = View.GONE
+                    binding.SurveyListFirstSurvey2DistrictSpinner.visibility = View.GONE
                     district = ""
                 }
                 else {
-                    districtSpinner.visibility = View.VISIBLE
-                    setDistrictSpinner(districtSpinner, position)
+                    binding.SurveyListFirstSurvey2DistrictSpinner.visibility = View.VISIBLE
+                    setDistrictSpinner(binding.SurveyListFirstSurvey2DistrictSpinner, position)
                 }
             }
             override fun onNothingSelected(p0: AdapterView<*>?) {
@@ -273,9 +271,8 @@ class SurveyListFirstSurvey2Fragment() : Fragment() {
     private fun setHousingTypeSpinner(view: View) {
         val housingTypeList = resources.getStringArray(R.array.housingType)
         val housingTypeAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, housingTypeList)
-        val housingTypeSpinner = view.findViewById<Spinner>(R.id.SurveyListFirstSurvey2_HousingTypeSpinner)
-        housingTypeSpinner.adapter = housingTypeAdapter
-        housingTypeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
+        binding.SurveyListFirstSurvey2HousingTypeSpinner.adapter = housingTypeAdapter
+        binding.SurveyListFirstSurvey2HousingTypeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 housingType = housingTypeList[position]
             }
@@ -287,9 +284,8 @@ class SurveyListFirstSurvey2Fragment() : Fragment() {
     private fun setFamilyTypeSpinner(view: View) {
         val familyTypeList = resources.getStringArray(R.array.familyType)
         val familyTypeAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, familyTypeList)
-        val familyTypeSpinner = view.findViewById<Spinner>(R.id.SurveyListFirstSurvey2_FamilyTypeSpinner)
-        familyTypeSpinner.adapter = familyTypeAdapter
-        familyTypeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
+        binding.SurveyListFirstSurvey2FamilyTypeSpinner.adapter = familyTypeAdapter
+        binding.SurveyListFirstSurvey2FamilyTypeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 family = familyTypeList[position]
             }

@@ -13,13 +13,15 @@ import androidx.fragment.app.activityViewModels
 import com.surveasy.surveasy.R
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.surveasy.surveasy.databinding.FragmentSurveylistfirstsurvey1Binding
 
 
 class SurveyListFirstSurvey1Fragment() : Fragment() {
 
     val db = Firebase.firestore
     val firstSurveyModel by activityViewModels<FirstSurveyViewModel>()
-
+    private var _binding : FragmentSurveylistfirstsurvey1Binding? = null
+    private val binding get() = _binding!!
     private lateinit var job : String
     private lateinit var major : String
     private lateinit var universityList : Array<String>
@@ -32,9 +34,8 @@ class SurveyListFirstSurvey1Fragment() : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-
-        val view = inflater.inflate(R.layout.fragment_surveylistfirstsurvey1,container,false)
-        val surveyListFirstSurvey1Btn : Button = view.findViewById(R.id.SurveyListFirstSurvey1_Btn)
+        _binding = FragmentSurveylistfirstsurvey1Binding.inflate(layoutInflater)
+        val view =  binding.root
         universityList = resources.getStringArray(R.array.university)
 
         // Set spinners
@@ -43,8 +44,7 @@ class SurveyListFirstSurvey1Fragment() : Fragment() {
         setSearchSpinner(view, universityList)
 
         // EngSurvey
-        val engSurveyRadioGroup = view.findViewById<RadioGroup>(R.id.SurveyListFirstSurvey1_EngSurveyRadioGroup)
-        engSurveyRadioGroup.setOnCheckedChangeListener { engSurveyRadioGroup, checked ->
+        binding.SurveyListFirstSurvey1EngSurveyRadioGroup.setOnCheckedChangeListener { engSurveyRadioGroup, checked ->
             when(checked) {
                 R.id.SurveyListFirstSurvey1_EngSurvey_O -> engSurvey = true
                 R.id.SurveyListFirstSurvey1_EngSurvey_X -> engSurvey = false
@@ -53,8 +53,7 @@ class SurveyListFirstSurvey1Fragment() : Fragment() {
 
 
         // military
-        val militaryRadioGroup = view.findViewById<RadioGroup>(R.id.SurveyListFirstSurvey1_MilitaryRadioGroup)
-        militaryRadioGroup.setOnCheckedChangeListener { militaryRadioGroup, checked ->
+        binding.SurveyListFirstSurvey1MilitaryRadioGroup.setOnCheckedChangeListener { militaryRadioGroup, checked ->
             when(checked) {
                 R.id.SurveyListFirstSurvey1_MilitaryDone -> military = "군필"
                 R.id.SurveyListFirstSurvey1_MilitaryYet -> military = "미필"
@@ -63,7 +62,7 @@ class SurveyListFirstSurvey1Fragment() : Fragment() {
         }
 
         // Next
-        surveyListFirstSurvey1Btn.setOnClickListener {
+        binding.SurveyListFirstSurvey1Btn.setOnClickListener {
             firstSurvey1(view)
 
         }
@@ -73,12 +72,16 @@ class SurveyListFirstSurvey1Fragment() : Fragment() {
         return view
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
 
 
     private fun firstSurvey1(view: View) {
-        val etcUnivInput = view.findViewById<EditText>(R.id.SurveyListFirstSurvey1_EtcUniv)
-        if((job == "대학생" && university == "기타") || (job == "대학생" && university == "")) university = etcUnivInput.text.toString()
-        if((job == "대학원생" && university == "기타") || (job == "대학원생" && university == "")) university = etcUnivInput.text.toString()
+        if((job == "대학생" && university == "기타") || (job == "대학생" && university == "")) university = binding.SurveyListFirstSurvey1EtcUniv.text.toString()
+        if((job == "대학원생" && university == "기타") || (job == "대학원생" && university == "")) university = binding.SurveyListFirstSurvey1EtcUniv.text.toString()
 
 
         if(job == "직업을 선택해주세요") Toast.makeText(context, "직업을 선택해주세요.", Toast.LENGTH_SHORT).show()
@@ -115,18 +118,16 @@ class SurveyListFirstSurvey1Fragment() : Fragment() {
     private fun setJobSpinner(view: View) {
         val jobList = resources.getStringArray(R.array.job)
         val jobAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, jobList)
-        val jobSpinner : Spinner = view.findViewById(R.id.SurveyListFirstSurvey1_JobSpinner)
-        val goneContainer : LinearLayout = view.findViewById(R.id.SurveyListFirstSurvey1_GoneContainer)
 
-        jobSpinner.adapter = jobAdapter
-        jobSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+        binding.SurveyListFirstSurvey1JobSpinner.adapter = jobAdapter
+        binding.SurveyListFirstSurvey1JobSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 job = jobList[position]
                 if(position == 1 || position == 2) {
-                    goneContainer.visibility = View.VISIBLE
+                    binding.SurveyListFirstSurvey1GoneContainer.visibility = View.VISIBLE
                 }
                 else {
-                    goneContainer.visibility = View.GONE
+                    binding.SurveyListFirstSurvey1GoneContainer.visibility = View.GONE
                     major = ""
                     university = ""
                 }
@@ -139,9 +140,8 @@ class SurveyListFirstSurvey1Fragment() : Fragment() {
     private fun setMajorSpinner(view: View) {
         val majorList = resources.getStringArray(R.array.major)
         val majorAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, majorList)
-        val majorSpinner : Spinner = view.findViewById(R.id.SurveyListFirstSurvey1_MajorSpinner)
-        majorSpinner.adapter = majorAdapter
-        majorSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+        binding.SurveyListFirstSurvey1MajorSpinner.adapter = majorAdapter
+        binding.SurveyListFirstSurvey1MajorSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 major = majorList[position]
             }
@@ -154,21 +154,18 @@ class SurveyListFirstSurvey1Fragment() : Fragment() {
         val universityAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, universityList)
         universityAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
 
-        val universitySpinner = view.findViewById<Spinner>(R.id.spinner_view)
-        val etcUnivInput = view.findViewById<EditText>(R.id.SurveyListFirstSurvey1_EtcUniv)
+        binding.spinnerView.adapter = universityAdapter
 
-        universitySpinner.adapter = universityAdapter
-
-        universitySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+        binding.spinnerView.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 university = universityList[position]
 
                 if(university == "기타") {
-                    etcUnivInput.visibility = View.VISIBLE
-                    university = etcUnivInput.text.toString()
+                    binding.SurveyListFirstSurvey1EtcUniv.visibility = View.VISIBLE
+                    university = binding.SurveyListFirstSurvey1EtcUniv.text.toString()
                 }
 
-                else etcUnivInput.visibility = View.GONE
+                else binding.SurveyListFirstSurvey1EtcUniv.visibility = View.GONE
             }
             override fun onNothingSelected(p0: AdapterView<*>?) {
             }

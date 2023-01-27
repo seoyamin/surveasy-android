@@ -109,11 +109,16 @@ class MainActivity : AppCompatActivity() {
         mainViewModelFactory = MainViewModelFactory(MainRepository())
         mainViewModel = ViewModelProvider(this, mainViewModelFactory)[MainViewModel::class.java]
 
+        mainViewModel.test()
+        mainViewModel.test1.observe(this@MainActivity){
+            Log.d(TAG, "onCreate: name name $it")
+        }
+
         CoroutineScope(Dispatchers.Main).launch {
             mainViewModel.fetchCurrentUser(Firebase.auth.currentUser!!.uid)
             mainViewModel.repositories1.observe(this@MainActivity){
                 mainViewModel.currentUserModel = it
-                Log.d(TAG, "onCreate: ${it.name}")
+                Log.d(TAG, "onCreate: ${it}")
             }
         }
 

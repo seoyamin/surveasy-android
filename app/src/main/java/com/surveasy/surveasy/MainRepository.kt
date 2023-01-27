@@ -19,10 +19,28 @@ class MainRepository {
 
     private val db = Firebase.firestore
 
-    suspend fun fetchCurrentUser(uid: String) :CurrentUser {
+    fun test() : String{
+        var temp : String? = null
+        db.collection("panelData").addSnapshotListener{ snap, e->
+            for(doc in snap!!.documentChanges){
+                if(doc.document.id=="lmhi8mpzo0YZGpx0NTRYkIdxAlE2"){
+                    temp = doc.document["name"].toString()
+                    Log.d(TAG, "test: $temp")
+                }
+
+
+            }
+        }
+
+        return "aa"
+    }
+
+
+    suspend fun fetchCurrentUser(uid: String) :ArrayList<CurrentUser> {
         val docRef = db.collection("panelData").document(uid.toString())
         val userSurveyList = ArrayList<UserSurveyItem>()
-        var currentUser = CurrentUser(null, null, null, null, null, null, null, null, null, null, null, null, null, null)
+        var currentUserList = ArrayList<CurrentUser>()
+        //var currentUser = CurrentUser(null, null, null, null, null, null, null, null, null, null, null, null, null, null)
 
 
         docRef.collection("UserSurveyList").get()
@@ -70,7 +88,7 @@ class MainRepository {
 
 
                 // userModel에 유저 정보 저장
-                currentUser = CurrentUser(
+                var currentUser = CurrentUser(
                     snapshot.result["uid"].toString(),
                     snapshot.result["fcmToken"].toString(),
                     snapshot.result["name"].toString(),
@@ -89,6 +107,9 @@ class MainRepository {
                     snapshot.result["marketingAgree"] as Boolean?,
                     userSurveyList
                 )
+
+                currentUserList.add(currentUser)
+
 
 
                 // [Amplitude] user properties (name, reward_total)
@@ -110,8 +131,7 @@ class MainRepository {
         }.addOnFailureListener { exception ->
             Log.d(ContentValues.TAG, "fail $exception")
         }
-        Log.d(TAG, "fetchCurrentUser: $currentUser")
-        return currentUser
+        return currentUserList
     }
 
 }

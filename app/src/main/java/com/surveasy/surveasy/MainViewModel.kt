@@ -9,15 +9,17 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.surveasy.surveasy.login.CurrentUser
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import kotlin.math.log
 
 class MainViewModel(private val repository: MainRepository) : ViewModel() {
-    private val _repositoriesFetchCurrentUser = MutableLiveData<ArrayList<CurrentUser>>()
-    val repositories1 : MutableLiveData<ArrayList<CurrentUser>>
+    private val _repositoriesFetchCurrentUser = MutableLiveData<CurrentUser>()
+    val repositories1 : MutableLiveData<CurrentUser>
         get() = _repositoriesFetchCurrentUser
-    private val _test = MutableLiveData<String>()
-    val test1 : LiveData<String>
+    private val _test = MutableLiveData<Dto>()
+    val test1 : LiveData<Dto>
         get() = _test
     private val _test1 = MutableLiveData<Flow<Dto>>()
     val test11 : LiveData<Flow<Dto>>
@@ -28,11 +30,26 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
     init {
         Log.d(TAG, ": MainViewMode init")
     }
-    lateinit var currentUserModel : ArrayList<CurrentUser>
+    var currentUserModel = ArrayList<CurrentUser>()
 
-    fun test(){
+    suspend fun fetchCurrentUser(uid : String){
         viewModelScope.launch {
-            _test.value = repository.tt.toString()
+            repository.fetchCurrentUser(uid).let {
+                delay(1500)
+                _repositoriesFetchCurrentUser.postValue(repository.rCurrentUser.value)
+                Log.d(TAG, "fetchCurrentUser: 뷰모델")
+            }
+        }
+    }
+
+    suspend fun test(){
+        viewModelScope.launch {
+            repository.test1().let {
+                delay(1500)
+                _test.postValue(repository.tt.value)
+                Log.d(TAG, "test: 뷰모델 지나감")
+            }
+
         }
     }
 

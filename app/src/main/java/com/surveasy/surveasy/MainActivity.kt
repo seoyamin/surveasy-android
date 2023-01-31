@@ -49,6 +49,7 @@ import com.surveasy.surveasy.userRoom.User
 import com.surveasy.surveasy.userRoom.UserDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONException
 import org.json.JSONObject
@@ -110,9 +111,9 @@ class MainActivity : AppCompatActivity() {
         mainViewModel = ViewModelProvider(this, mainViewModelFactory)[MainViewModel::class.java]
 
         CoroutineScope(Dispatchers.Main).launch {
-            mainViewModel.test()
-            mainViewModel.test1.observe(this@MainActivity){
-                Log.d(TAG, "onCreate: #####$it")
+            mainViewModel.fetchCurrentUser(Firebase.auth.currentUser!!.uid)
+            mainViewModel.repositories1.observe(this@MainActivity){
+                Log.d(TAG, "onCreate: ###${it.name} ${it.accountNumber}")
             }
         }
 

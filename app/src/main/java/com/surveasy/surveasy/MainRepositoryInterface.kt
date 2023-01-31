@@ -7,7 +7,8 @@ import kotlinx.coroutines.flow.Flow
 
 interface MainRepositoryInterface {
 
+    //fetchCurrentUser
+    suspend fun fetchCurrentUser(uid : String)
     suspend fun test1() {}
-    suspend fun test2(){}
 
 }

@@ -12,6 +12,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
+import androidx.lifecycle.ViewModelProvider
 import androidx.room.Room
 import com.amplitude.api.Amplitude
 import com.surveasy.surveasy.databinding.ActivityMainBinding
@@ -46,6 +47,10 @@ import com.surveasy.surveasy.home.Opinion.HomeOpinionAnswerViewModel
 import com.surveasy.surveasy.list.firstsurvey.PushDialogActivity
 import com.surveasy.surveasy.userRoom.User
 import com.surveasy.surveasy.userRoom.UserDatabase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.json.JSONException
 import org.json.JSONObject
 import java.text.SimpleDateFormat
@@ -67,6 +72,10 @@ class MainActivity : AppCompatActivity() {
     val contributionModel by viewModels<HomeContributionViewModel>()
     val opinionModel by viewModels<HomeOpinionViewModel>()
     val opinionAnswerModel by viewModels<HomeOpinionAnswerViewModel>()
+    
+    private lateinit var mainViewModel: MainViewModel
+    private lateinit var mainViewModelFactory : MainViewModelFactory
+    
     private lateinit var userDB : UserDatabase
     private var age : Int = 0
     private var gender : String = ""
@@ -93,12 +102,21 @@ class MainActivity : AppCompatActivity() {
         checkUpdate()
 
         fetchBanner()
-        fetchCurrentUser(Firebase.auth.currentUser!!.uid)
+        //fetchCurrentUser(Firebase.auth.currentUser!!.uid)
         fetchSurvey()
         fetchContribution()
         fetchOpinion()
 
-        
+        mainViewModelFactory = MainViewModelFactory(MainRepository())
+        mainViewModel = ViewModelProvider(this, mainViewModelFactory)[MainViewModel::class.java]
+
+        CoroutineScope(Dispatchers.Main).launch {
+            mainViewModel.fetchCurrentUser(Firebase.auth.currentUser!!.uid)
+            mainViewModel.repositories1.observe(this@MainActivity){
+                Log.d(TAG, "onCreate: ###${it.name} ${it.accountNumber}")
+            }
+        }
+
 
         // Current User
         val user = Firebase.auth.currentUser
@@ -219,6 +237,7 @@ class MainActivity : AppCompatActivity() {
     private fun fetchCurrentUser(uid: String) :CurrentUser {
         val docRef = db.collection("panelData").document(uid.toString())
         val userSurveyList = ArrayList<UserSurveyItem>()
+
 
         docRef.collection("UserSurveyList").get()
             .addOnSuccessListener { documents ->

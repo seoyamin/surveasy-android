@@ -13,13 +13,12 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.amplitude.api.Amplitude
-import com.surveasy.surveasy.MainActivity
 
-import com.surveasy.surveasy.R
 import com.surveasy.surveasy.list.*
 import com.surveasy.surveasy.login.*
 import com.surveasy.surveasy.home.Opinion.HomeOpinionDetailActivity
@@ -38,6 +37,7 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.ListResult
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
+import com.surveasy.surveasy.*
 import com.surveasy.surveasy.databinding.FragmentHomeBinding
 import com.surveasy.surveasy.home.Opinion.HomeOpinionAnswerActivity
 import com.surveasy.surveasy.home.Opinion.HomeOpinionAnswerViewModel
@@ -72,6 +72,8 @@ class HomeFragment : Fragment() {
     private val answerModel by activityViewModels<HomeOpinionAnswerViewModel>()
     private val model by activityViewModels<SurveyInfoViewModel>()
 
+    private lateinit var mainViewModel: MainViewModel
+    private lateinit var mainViewModelFactory : MainViewModelFactory
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -89,6 +91,19 @@ class HomeFragment : Fragment() {
         val view = binding.root
 
         val container : RecyclerView? = view.findViewById(R.id.homeList_recyclerView)
+
+
+
+        mainViewModelFactory = MainViewModelFactory(MainRepository())
+        mainViewModel = ViewModelProvider(this, mainViewModelFactory)[MainViewModel::class.java]
+        CoroutineScope(Dispatchers.Main).launch {
+            mainViewModel.fetchCurrentUser(Firebase.auth.currentUser!!.uid)
+            mainViewModel.repositories1.observe(viewLifecycleOwner){
+                Log.d(TAG, "onCreate: fragment###${it.name} ${it.accountNumber}")
+            }
+        }
+
+
 
         // Banner init
         bannerPager = view.findViewById(R.id.Home_BannerViewPager)

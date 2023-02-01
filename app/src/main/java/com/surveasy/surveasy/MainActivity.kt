@@ -110,12 +110,12 @@ class MainActivity : AppCompatActivity() {
         mainViewModelFactory = MainViewModelFactory(MainRepository())
         mainViewModel = ViewModelProvider(this, mainViewModelFactory)[MainViewModel::class.java]
 
-        CoroutineScope(Dispatchers.Main).launch {
-            mainViewModel.fetchCurrentUser(Firebase.auth.currentUser!!.uid)
-            mainViewModel.repositories1.observe(this@MainActivity){
-                Log.d(TAG, "onCreate: ###${it.name} ${it.accountNumber}")
-            }
-        }
+//        CoroutineScope(Dispatchers.Main).launch {
+//            mainViewModel.fetchCurrentUser(Firebase.auth.currentUser!!.uid)
+//            mainViewModel.repositories1.observe(this@MainActivity){
+//                Log.d(TAG, "onCreate: ###${it.name} ${it.accountNumber}")
+//            }
+//        }
 
 
         // Current User

@@ -18,38 +18,27 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
     private val _repositoriesFetchCurrentUser = MutableLiveData<CurrentUser>()
     val repositories1 : MutableLiveData<CurrentUser>
         get() = _repositoriesFetchCurrentUser
-    private val _test = MutableLiveData<Dto>()
-    val test1 : LiveData<Dto>
-        get() = _test
-    private val _test1 = MutableLiveData<Flow<Dto>>()
-    val test11 : LiveData<Flow<Dto>>
-        get() = _test1
+    private val _repositoriesFetchBannerImg = MutableLiveData<ArrayList<String>>()
+    val repositories2 : MutableLiveData<ArrayList<String>>
+        get() = _repositoriesFetchBannerImg
 
     private val db = Firebase.firestore
 
     init {
         Log.d(TAG, ": MainViewMode init")
     }
-    var currentUserModel = ArrayList<CurrentUser>()
 
     suspend fun fetchCurrentUser(uid : String){
         viewModelScope.launch {
-            repository.fetchCurrentUser(uid).let {
-                delay(1500)
-                _repositoriesFetchCurrentUser.postValue(repository.rCurrentUser.value)
-                Log.d(TAG, "fetchCurrentUser: 뷰모델")
-            }
+            repository.fetchCurrentUser(uid, _repositoriesFetchCurrentUser)
+
         }
     }
 
-    suspend fun test(){
+    suspend fun fetchBannerImg(){
         viewModelScope.launch {
-            repository.test1().let {
-                delay(1500)
-                _test.postValue(repository.tt.value)
-                Log.d(TAG, "test: 뷰모델 지나감")
-            }
-
+            repository.fetchBannerImg(_repositoriesFetchBannerImg)
+            Log.d(TAG, "fetchCurrentUser: 뷰모델")
         }
     }
 

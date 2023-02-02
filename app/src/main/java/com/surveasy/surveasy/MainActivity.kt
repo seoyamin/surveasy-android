@@ -101,7 +101,7 @@ class MainActivity : AppCompatActivity() {
         appUpdateManager = AppUpdateManagerFactory.create(this)
         checkUpdate()
 
-        fetchBanner()
+        //fetchBanner()
         //fetchCurrentUser(Firebase.auth.currentUser!!.uid)
         fetchSurvey()
         fetchContribution()

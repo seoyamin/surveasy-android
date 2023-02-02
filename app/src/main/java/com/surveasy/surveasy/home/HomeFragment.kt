@@ -97,9 +97,22 @@ class HomeFragment : Fragment() {
         mainViewModelFactory = MainViewModelFactory(MainRepository())
         mainViewModel = ViewModelProvider(this, mainViewModelFactory)[MainViewModel::class.java]
         CoroutineScope(Dispatchers.Main).launch {
+
+            //user info fetch
             mainViewModel.fetchCurrentUser(Firebase.auth.currentUser!!.uid)
             mainViewModel.repositories1.observe(viewLifecycleOwner){
-                Log.d(TAG, "onCreate: fragment###${it.name} ${it.accountNumber}")
+                Log.d(TAG, "onCreate: fragment###${it.name}")
+            }
+
+            //banner fetch
+            mainViewModel.fetchBannerImg()
+            mainViewModel.repositories2.observe(viewLifecycleOwner){
+                Log.d(TAG, "onCreateView: $it")
+                binding.HomeBannerDefault.visibility = View.INVISIBLE
+                binding.textViewTotalBanner.text = it.size.toString()
+                bannerPager.offscreenPageLimit = it.size
+                bannerPager.adapter = BannerViewPagerAdapter(mContext, it)
+                bannerPager.orientation = ViewPager2.ORIENTATION_HORIZONTAL
             }
         }
 
@@ -108,25 +121,25 @@ class HomeFragment : Fragment() {
         // Banner init
         bannerPager = view.findViewById(R.id.Home_BannerViewPager)
         val bannerDefault : ImageView = view.findViewById(R.id.Home_BannerDefault)
-
-        Glide.with(this@HomeFragment).load(R.raw.app_loading).into(binding.HomeBannerDefault)
-        CoroutineScope(Dispatchers.Main).launch {
-            val banner = CoroutineScope(Dispatchers.IO).async {
-                while (bannerModel.uriList.size == 0) {
-                    //bannerDefault.visibility = View.VISIBLE
-                }
-                binding.HomeBannerDefault.visibility = View.INVISIBLE
-                bannerModel.uriList
-
-            }.await()
-
-            binding.HomeBannerDefault.visibility = View.INVISIBLE
-            binding.textViewTotalBanner.text = bannerModel.num.toString()
-            bannerPager.offscreenPageLimit = bannerModel.num
-            bannerPager.adapter = BannerViewPagerAdapter(mContext, bannerModel.uriList)
-            bannerPager.orientation = ViewPager2.ORIENTATION_HORIZONTAL
-
-        }
+//
+//        Glide.with(this@HomeFragment).load(R.raw.app_loading).into(binding.HomeBannerDefault)
+//        CoroutineScope(Dispatchers.Main).launch {
+//            val banner = CoroutineScope(Dispatchers.IO).async {
+//                while (bannerModel.uriList.size == 0) {
+//                    //bannerDefault.visibility = View.VISIBLE
+//                }
+//                binding.HomeBannerDefault.visibility = View.INVISIBLE
+//                bannerModel.uriList
+//
+//            }.await()
+//
+//            binding.HomeBannerDefault.visibility = View.INVISIBLE
+//            binding.textViewTotalBanner.text = bannerModel.num.toString()
+//            bannerPager.offscreenPageLimit = bannerModel.num
+//            bannerPager.adapter = BannerViewPagerAdapter(mContext, bannerModel.uriList)
+//            bannerPager.orientation = ViewPager2.ORIENTATION_HORIZONTAL
+//
+//        }
 
 
         // Banner 넘기면 [현재 페이지/전체 페이지] 변화

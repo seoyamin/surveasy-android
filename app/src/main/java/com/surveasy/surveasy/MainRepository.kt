@@ -11,8 +11,14 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.ListResult
 import com.google.firebase.storage.StorageReference
+import com.surveasy.surveasy.home.Opinion.AnswerItem
+import com.surveasy.surveasy.home.Opinion.OpinionItem
+import com.surveasy.surveasy.home.contribution.ContributionItems
 import com.surveasy.surveasy.list.UserSurveyItem
 import com.surveasy.surveasy.login.CurrentUser
+import com.surveasy.surveasy.model.ContributionModel
+import com.surveasy.surveasy.model.OpinionAModel
+import com.surveasy.surveasy.model.OpinionQModel
 import com.surveasy.surveasy.userRoom.User
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -103,6 +109,68 @@ class MainRepository : MainRepositoryInterface {
             //model.postValue(uriList)
             //Log.d(TAG, "fetchBannerImg: repository $uriList")
         }
+    }
+
+    //fetch contribution
+    override suspend fun fetchContribution(model: MutableLiveData<ArrayList<ContributionModel>>) {
+        db.collection("AppContribution").get()
+            .addOnSuccessListener { documents ->
+                if(documents != null) {
+                    var contributionList = ArrayList<ContributionModel>()
+                    for (document in documents) {
+                        val contribution = ContributionModel(
+                            document["date"].toString(),
+                            document["title"].toString(),
+                            document["journal"].toString(),
+                            document["source"].toString(),
+                            document["institute"].toString(),
+                            document["img"].toString(),
+                            document["content"].toString()
+
+                        )
+                        contributionList.add(contribution)
+                    }
+                    model.postValue(contributionList)
+                }
+
+            }
+    }
+    private fun fetchContribution() {
+
+
+    }
+
+    override suspend fun fetchOpinion(model1 : MutableLiveData<OpinionQModel>, model2 : MutableLiveData<List<OpinionAModel>>) {
+        db.collection("AppOpinion").whereEqualTo("isValid", true)
+            .get().addOnCompleteListener{ documents ->
+                val data = documents.result.documents[0]
+                val question = OpinionQModel(
+                    Integer.parseInt(data["id"].toString()),
+                    data["question"].toString(),
+                    data["content1"].toString(),
+                    data["content2"].toString()
+                )
+                model1.postValue(question)
+            }
+        db.collection("AppAnswer").get()
+            .addOnSuccessListener { documents ->
+                var answerList = ArrayList<OpinionAModel>()
+                if(documents != null){
+                    for (document in documents){
+                        val answerItem  = OpinionAModel(
+                            Integer.parseInt(document["id"].toString()) as Int,
+                            document["question"] as String,
+                            document["content1"] as String?,
+                            document["content2"] as String?,
+                            document["content3"] as String?
+                        )
+                        answerList.add(answerItem)
+                    }
+                }
+                model2.postValue(answerList.sortedByDescending { it.id })
+            }.addOnFailureListener{ exception ->
+                Log.d(TAG, "fail $exception")
+            }
     }
 
 

@@ -9,6 +9,9 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.surveasy.surveasy.login.CurrentUser
+import com.surveasy.surveasy.model.ContributionModel
+import com.surveasy.surveasy.model.OpinionAModel
+import com.surveasy.surveasy.model.OpinionQModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -21,6 +24,15 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
     private val _repositoriesFetchBannerImg = MutableLiveData<ArrayList<String>>()
     val repositories2 : MutableLiveData<ArrayList<String>>
         get() = _repositoriesFetchBannerImg
+    private val _repositoriesFetchContribution = MutableLiveData<ArrayList<ContributionModel>>()
+    val repositories3 : MutableLiveData<ArrayList<ContributionModel>>
+        get() = _repositoriesFetchContribution
+    private val _repositoriesFetchOpinionQ = MutableLiveData<OpinionQModel>()
+    val repositories4 : MutableLiveData<OpinionQModel>
+        get() = _repositoriesFetchOpinionQ
+    private val _repositoriesFetchOpinionA = MutableLiveData<List<OpinionAModel>>()
+    val repositories5 : MutableLiveData<List<OpinionAModel>>
+        get() = _repositoriesFetchOpinionA
 
     private val db = Firebase.firestore
 
@@ -38,6 +50,19 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
     suspend fun fetchBannerImg(){
         viewModelScope.launch {
             repository.fetchBannerImg(_repositoriesFetchBannerImg)
+        }
+    }
+
+    suspend fun fetchContribution(){
+        viewModelScope.launch {
+            repository.fetchContribution(_repositoriesFetchContribution)
+
+        }
+    }
+
+    suspend fun fetchOpinion(){
+        viewModelScope.launch {
+            repository.fetchOpinion(_repositoriesFetchOpinionQ, _repositoriesFetchOpinionA)
             Log.d(TAG, "fetchCurrentUser: 뷰모델")
         }
     }

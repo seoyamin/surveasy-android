@@ -104,7 +104,7 @@ class MainActivity : AppCompatActivity() {
         //fetchBanner()
         //fetchCurrentUser(Firebase.auth.currentUser!!.uid)
         fetchSurvey()
-        fetchContribution()
+        //fetchContribution()
         fetchOpinion()
 
         mainViewModelFactory = MainViewModelFactory(MainRepository())
@@ -490,24 +490,6 @@ class MainActivity : AppCompatActivity() {
                     opinion["content2"].toString()
                 )
             }
-
-        /*
-        db.collection("AppOpinion").get()
-            .addOnSuccessListener { documents ->
-                if(documents != null) {
-                    for (document in documents) {
-                        if(document["isValid"] as Boolean == true) {
-                            Log.d(TAG, "fetchOpinion: 속도 비교2 ${document["id"].toString()}")
-                            opinionModel.opinionItem = OpinionItem(
-                                Integer.parseInt(document["id"].toString()),
-                                document["question"].toString(),
-                                document["content1"].toString(),
-                                document["content2"].toString()
-                            )
-                        }
-                    }
-                }
-            }*/
         db.collection("AppAnswer").get()
             .addOnSuccessListener { documents ->
                 if(documents != null){

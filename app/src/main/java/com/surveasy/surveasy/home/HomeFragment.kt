@@ -101,13 +101,13 @@ class HomeFragment : Fragment() {
             //user info fetch
             mainViewModel.fetchCurrentUser(Firebase.auth.currentUser!!.uid)
             mainViewModel.repositories1.observe(viewLifecycleOwner){
-                Log.d(TAG, "onCreate: fragment###${it.name}")
+//                Log.d(TAG, "onCreate: fragment###${it.name}")
             }
 
             //banner fetch
             mainViewModel.fetchBannerImg()
             mainViewModel.repositories2.observe(viewLifecycleOwner){
-                Log.d(TAG, "onCreateView: $it")
+//                Log.d(TAG, "onCreateView: $it")
                 binding.HomeBannerDefault.visibility = View.INVISIBLE
                 binding.textViewTotalBanner.text = it.size.toString()
                 bannerPager.offscreenPageLimit = it.size
@@ -275,25 +275,31 @@ class HomeFragment : Fragment() {
 
         // Contribution
         CoroutineScope(Dispatchers.Main).launch {
-            val contributionList = CoroutineScope(Dispatchers.IO).async {
-                while(contributionModel.contributionList.size == 0) { }
-                contributionModel.contributionList
-            }.await()
-
-            binding.HomeContributionRecyclerView.layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
-            binding.HomeContributionRecyclerView.adapter = ContributionItemsAdapter(contributionList)
+            mainViewModel.fetchContribution()
+            mainViewModel.repositories3.observe(viewLifecycleOwner){
+                binding.HomeContributionRecyclerView.layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+                binding.HomeContributionRecyclerView.adapter = ContributionItemsAdapter(it)
+            }
 
         }
 
 
         // Opinion
         CoroutineScope(Dispatchers.Main).launch {
-            val opinionItem = CoroutineScope(Dispatchers.IO).async {
-                while(opinionModel.opinionItem.question == null) { }
-                opinionModel.opinionItem
-            }.await()
-
-            binding.HomeOpinionTextView.text = opinionModel.opinionItem.question
+            mainViewModel.fetchOpinion()
+            mainViewModel.repositories4.observe(viewLifecycleOwner){
+                binding.HomeOpinionTextView.text = it.question
+                Log.d(TAG, "onCreateView: aaaaaa$it")
+            }
+            mainViewModel.repositories5.observe(viewLifecycleOwner){
+                Log.d(TAG, "onCreateView: ${it.get(1).question}")
+            }
+//            val opinionItem = CoroutineScope(Dispatchers.IO).async {
+//                while(opinionModel.opinionItem.question == null) { }
+//                opinionModel.opinionItem
+//            }.await()
+//
+//            binding.HomeOpinionTextView.text = opinionModel.opinionItem.question
         }
 
         binding.HomeOpinionQContainer.setOnClickListener {

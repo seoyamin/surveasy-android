@@ -35,6 +35,7 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
+import com.kakao.sdk.common.util.Utility
 import com.surveasy.surveasy.userRoom.UserDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -115,25 +116,25 @@ class SplashActivity : AppCompatActivity() {
             }
         } */
 
-
-        db.collection("AndroidFirstScreen").get()
-            .addOnSuccessListener { result ->
-                var i = 0
-                for(document in result){   if(document.id == token) i++   }
-                if(i==0){
-                    startActivity(Intent(this,FirstIntroduceScreenActivity::class.java))
-                    finish()
-                }
-                else {
-                    nextActivity()
-
-//                    var bannerIndex = 0
-//                    for(item in bannerModel.uriList) {
-//                        intent.putExtra(item, "banner" + bannerIndex.toString())
-//                        bannerIndex++
-//                    }
-                }
-            }
+        nextActivity()
+//        db.collection("AndroidFirstScreen").get()
+//            .addOnSuccessListener { result ->
+//                var i = 0
+//                for(document in result){   if(document.id == token) i++   }
+//                if(i==0){
+//                    startActivity(Intent(this,FirstIntroduceScreenActivity::class.java))
+//                    finish()
+//                }
+//                else {
+//                    nextActivity()
+//
+////                    var bannerIndex = 0
+////                    for(item in bannerModel.uriList) {
+////                        intent.putExtra(item, "banner" + bannerIndex.toString())
+////                        bannerIndex++
+////                    }
+//                }
+//            }
 
     }
 

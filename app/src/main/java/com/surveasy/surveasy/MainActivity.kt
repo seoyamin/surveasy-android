@@ -46,6 +46,7 @@ import com.surveasy.surveasy.home.Opinion.AnswerItem
 import com.surveasy.surveasy.home.Opinion.HomeOpinionAnswerViewModel
 import com.surveasy.surveasy.list.firstsurvey.PushDialogActivity
 import com.surveasy.surveasy.userRoom.User
+import com.surveasy.surveasy.userRoom.UserDao
 import com.surveasy.surveasy.userRoom.UserDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -75,6 +76,7 @@ class MainActivity : AppCompatActivity() {
     
     private lateinit var mainViewModel: MainViewModel
     private lateinit var mainViewModelFactory : MainViewModelFactory
+
     
     private lateinit var userDB : UserDatabase
     private var age : Int = 0
@@ -101,22 +103,54 @@ class MainActivity : AppCompatActivity() {
         appUpdateManager = AppUpdateManagerFactory.create(this)
         checkUpdate()
 
-        fetchBanner()
+        //fetchBanner()
         //fetchCurrentUser(Firebase.auth.currentUser!!.uid)
-        fetchSurvey()
-        fetchContribution()
-        fetchOpinion()
+        //fetchSurvey()
+        //fetchContribution()
+        //fetchOpinion()
 
         mainViewModelFactory = MainViewModelFactory(MainRepository())
         mainViewModel = ViewModelProvider(this, mainViewModelFactory)[MainViewModel::class.java]
 
         CoroutineScope(Dispatchers.Main).launch {
+            //user info fetch
             mainViewModel.fetchCurrentUser(Firebase.auth.currentUser!!.uid)
             mainViewModel.repositories1.observe(this@MainActivity){
-                Log.d(TAG, "onCreate: ###${it.name} ${it.accountNumber}")
+                // Local Room DB에 current user의 User 객체 저장하기
+                val uidNum = userDB.userDao().getNumUid(it.uid.toString())
+
+                // [case 1] 해당 uid 가진 튜플 없는 경우 (INSERT user info)
+                if(uidNum == 0) {
+                    userDB.userDao().deleteAll()
+                    val user : User = User(
+                        it.uid.toString(),
+                        Integer.parseInt(it.birthDate.toString().substring(0, 4)),
+                        it.gender.toString(),
+                        it.fcmToken.toString(),
+                        it.autoLogin as Boolean,
+                        )
+                    userDB.userDao().insert(user)
+                }
+
+                // [case 2] 이미 동일한 uid의 튜플이 저장된 경우 (UPDATE fcm token)
+                else if(uidNum == 1) {
+                    userDB.userDao().updateFcm(it.uid.toString(),it.fcmToken.toString())
+                }
             }
         }
-
+        
+        //survey fetch
+        CoroutineScope(Dispatchers.Main).launch {
+            // [Targeting] Room DB에서 User info 가져오기
+            val birthYear = userDB.userDao().getBirth()
+            val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+            age = currentYear - birthYear + 1
+            gender = userDB.userDao().getGender()
+            mainViewModel.fetchSurvey(20, "여")
+            mainViewModel.repositories6.observe(this@MainActivity){
+                Log.d(TAG, "onCreate: 66666${it.get(0)}")
+            }
+        }
 
         // Current User
         val user = Firebase.auth.currentUser
@@ -205,13 +239,6 @@ class MainActivity : AppCompatActivity() {
 
             supportFragmentManager.beginTransaction()
                 .replace(R.id.MainView, MyViewFragment())
-                .commit()
-        }
-
-
-        fun clickList() {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.MainView, SurveyListFragment())
                 .commit()
         }
 
@@ -490,24 +517,6 @@ class MainActivity : AppCompatActivity() {
                     opinion["content2"].toString()
                 )
             }
-
-        /*
-        db.collection("AppOpinion").get()
-            .addOnSuccessListener { documents ->
-                if(documents != null) {
-                    for (document in documents) {
-                        if(document["isValid"] as Boolean == true) {
-                            Log.d(TAG, "fetchOpinion: 속도 비교2 ${document["id"].toString()}")
-                            opinionModel.opinionItem = OpinionItem(
-                                Integer.parseInt(document["id"].toString()),
-                                document["question"].toString(),
-                                document["content1"].toString(),
-                                document["content2"].toString()
-                            )
-                        }
-                    }
-                }
-            }*/
         db.collection("AppAnswer").get()
             .addOnSuccessListener { documents ->
                 if(documents != null){

@@ -9,8 +9,9 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.amplitude.api.Amplitude
 import com.surveasy.surveasy.R
+import com.surveasy.surveasy.model.ContributionModel
 
-class ContributionItemsAdapter(val contributionList : ArrayList<ContributionItems>)
+class ContributionItemsAdapter(val contributionList : ArrayList<ContributionModel>)
     : RecyclerView.Adapter<ContributionItemsAdapter.CustomViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int)
@@ -20,7 +21,7 @@ class ContributionItemsAdapter(val contributionList : ArrayList<ContributionItem
     }
 
     override fun onBindViewHolder(holder: CustomViewHolder, position: Int) {
-        val contribution : ContributionItems = contributionList[position]
+        val contribution : ContributionModel = contributionList[position]
 
         if(contribution.title.length > 20) holder.contributionItemTitle.text = contribution.title.substring(0, 20) + "..."
         else { holder.contributionItemTitle.text = contribution.title }

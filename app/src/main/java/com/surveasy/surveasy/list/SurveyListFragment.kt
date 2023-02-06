@@ -10,12 +10,16 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.surveasy.surveasy.R
 import com.surveasy.surveasy.login.CurrentUserViewModel
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.surveasy.surveasy.MainRepository
+import com.surveasy.surveasy.MainViewModel
+import com.surveasy.surveasy.MainViewModelFactory
 import kotlinx.coroutines.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -29,6 +33,9 @@ class SurveyListFragment() : Fragment() {
     val surveyList = arrayListOf<SurveyItems>()
     val model by activityViewModels<SurveyInfoViewModel>()
     val userModel by activityViewModels<CurrentUserViewModel>()
+
+    private lateinit var mainViewModel: MainViewModel
+    private lateinit var mainViewModelFactory : MainViewModelFactory
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -88,11 +95,17 @@ class SurveyListFragment() : Fragment() {
             }
         }
 
+        mainViewModelFactory = MainViewModelFactory(MainRepository())
+        mainViewModel = ViewModelProvider(this, mainViewModelFactory)[MainViewModel::class.java]
 
-
+        //이부분 수정
         CoroutineScope(Dispatchers.Main).launch {
             //val model by activityViewModels<SurveyInfoViewModel>()
-            getSurveyList(model)
+            //getSurveyList(model)
+            mainViewModel.fetchSurvey(20, "여")
+            mainViewModel.repositories6.observe(viewLifecycleOwner){
+                Log.d(TAG, "onCreate: 000000${it.get(0)}")
+            }
 
             val adapter = SurveyItemsAdapter(model.sortSurveyRecent(), changeDoneSurvey(),showCanParticipateList)
             container?.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)

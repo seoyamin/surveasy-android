@@ -9,6 +9,10 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.surveasy.surveasy.login.CurrentUser
+import com.surveasy.surveasy.model.ContributionModel
+import com.surveasy.surveasy.model.OpinionAModel
+import com.surveasy.surveasy.model.OpinionQModel
+import com.surveasy.surveasy.model.SurveyModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -18,38 +22,58 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
     private val _repositoriesFetchCurrentUser = MutableLiveData<CurrentUser>()
     val repositories1 : MutableLiveData<CurrentUser>
         get() = _repositoriesFetchCurrentUser
-    private val _test = MutableLiveData<Dto>()
-    val test1 : LiveData<Dto>
-        get() = _test
-    private val _test1 = MutableLiveData<Flow<Dto>>()
-    val test11 : LiveData<Flow<Dto>>
-        get() = _test1
+    private val _repositoriesFetchBannerImg = MutableLiveData<ArrayList<String>>()
+    val repositories2 : MutableLiveData<ArrayList<String>>
+        get() = _repositoriesFetchBannerImg
+    private val _repositoriesFetchContribution = MutableLiveData<ArrayList<ContributionModel>>()
+    val repositories3 : MutableLiveData<ArrayList<ContributionModel>>
+        get() = _repositoriesFetchContribution
+    private val _repositoriesFetchOpinionQ = MutableLiveData<OpinionQModel>()
+    val repositories4 : MutableLiveData<OpinionQModel>
+        get() = _repositoriesFetchOpinionQ
+    private val _repositoriesFetchOpinionA = MutableLiveData<List<OpinionAModel>>()
+    val repositories5 : MutableLiveData<List<OpinionAModel>>
+        get() = _repositoriesFetchOpinionA
+    private val _repositoriesFetchSurvey = MutableLiveData<ArrayList<SurveyModel>>()
+    val repositories6 : MutableLiveData<ArrayList<SurveyModel>>
+        get() = _repositoriesFetchSurvey
 
     private val db = Firebase.firestore
 
     init {
         Log.d(TAG, ": MainViewMode init")
     }
-    var currentUserModel = ArrayList<CurrentUser>()
 
     suspend fun fetchCurrentUser(uid : String){
         viewModelScope.launch {
-            repository.fetchCurrentUser(uid).let {
-                delay(1500)
-                _repositoriesFetchCurrentUser.postValue(repository.rCurrentUser.value)
-                Log.d(TAG, "fetchCurrentUser: 뷰모델")
-            }
+            repository.fetchCurrentUser(uid, _repositoriesFetchCurrentUser)
+
         }
     }
 
-    suspend fun test(){
+    suspend fun fetchSurvey(userAge : Int, userGender : String){
         viewModelScope.launch {
-            repository.test1().let {
-                delay(1500)
-                _test.postValue(repository.tt.value)
-                Log.d(TAG, "test: 뷰모델 지나감")
-            }
+            repository.fetchSurvey(_repositoriesFetchSurvey, userAge, userGender)
+        }
+    }
 
+    suspend fun fetchBannerImg(){
+        viewModelScope.launch {
+            repository.fetchBannerImg(_repositoriesFetchBannerImg)
+        }
+    }
+
+    suspend fun fetchContribution(){
+        viewModelScope.launch {
+            repository.fetchContribution(_repositoriesFetchContribution)
+
+        }
+    }
+
+    suspend fun fetchOpinion(){
+        viewModelScope.launch {
+            repository.fetchOpinion(_repositoriesFetchOpinionQ, _repositoriesFetchOpinionA)
+            Log.d(TAG, "fetchCurrentUser: 뷰모델")
         }
     }
 

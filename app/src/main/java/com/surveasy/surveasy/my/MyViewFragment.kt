@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment
 import com.surveasy.surveasy.R
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.room.Room
 import com.amplitude.api.Amplitude
 import com.surveasy.surveasy.login.CurrentUserViewModel
@@ -24,6 +25,9 @@ import com.surveasy.surveasy.my.info.MyViewInfoActivity
 import com.surveasy.surveasy.my.setting.MyViewSettingActivity
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.surveasy.surveasy.MainRepository
+import com.surveasy.surveasy.MainViewModel
+import com.surveasy.surveasy.MainViewModelFactory
 import com.surveasy.surveasy.my.notice.*
 import com.surveasy.surveasy.my.notice.noticeRoom.NoticeDatabase
 import kotlinx.coroutines.*
@@ -38,6 +42,9 @@ class MyViewFragment : Fragment() {
     val userModel by activityViewModels<CurrentUserViewModel>()
     private lateinit var noticeDB : NoticeDatabase
 
+    private lateinit var mainViewModel: MainViewModel
+    private lateinit var mainViewModelFactory : MainViewModelFactory
+
     override fun onStart() {
         super.onStart()
         val infoIcon = requireView().findViewById<LinearLayout>(R.id.MyView_InfoIcon)
@@ -47,6 +54,20 @@ class MyViewFragment : Fragment() {
         val userRewardFinAmount = requireView().findViewById<TextView>(R.id.MyView_UserRewardFinAmount)
         val userRewardYetAmount = requireView().findViewById<TextView>(R.id.MyView_UserRewardYetAmount)
         val userSurveyCountAmount = requireView().findViewById<TextView>(R.id.MyView_UserSurveyCountAmount)
+
+
+        mainViewModelFactory = MainViewModelFactory(MainRepository())
+        mainViewModel = ViewModelProvider(this, mainViewModelFactory)[MainViewModel::class.java]
+        CoroutineScope(Dispatchers.Main).launch {
+            mainViewModel.fetchCurrentUser(Firebase.auth.currentUser!!.uid)
+            mainViewModel.repositories1.observe(viewLifecycleOwner){
+                userName.text = it.name
+                val rewardFin = (it.rewardTotal!!.toInt()) - (it.rewardCurrent!!.toInt())
+                userRewardFinAmount.text = rewardFin.toString()
+                userRewardYetAmount.text = it.rewardCurrent.toString()
+                userSurveyCountAmount.text = it.UserSurveyList!!.size.toString()
+            }
+        }
 
         CoroutineScope(Dispatchers.Main).launch {
             val myInfo = CoroutineScope(Dispatchers.IO).async {
@@ -76,13 +97,13 @@ class MyViewFragment : Fragment() {
         }
 
         // Set UI with userModel
-        if(userModel.currentUser.uid != null) {
-            userName.text = "${userModel.currentUser.name}님"
-            val rewardFin = (userModel.currentUser.rewardTotal!!) - (userModel.currentUser.rewardCurrent!!)
-            userRewardFinAmount.text = "${rewardFin}원"
-            userRewardYetAmount.text = "${userModel.currentUser.rewardCurrent}원"
-            userSurveyCountAmount.text = "${userModel.currentUser.UserSurveyList!!.size}개"
-        }
+//        if(userModel.currentUser.uid != null) {
+//            userName.text = "${userModel.currentUser.name}님"
+//            val rewardFin = (userModel.currentUser.rewardTotal!!) - (userModel.currentUser.rewardCurrent!!)
+//            userRewardFinAmount.text = "${rewardFin}원"
+//            userRewardYetAmount.text = "${userModel.currentUser.rewardCurrent}원"
+//            userSurveyCountAmount.text = "${userModel.currentUser.UserSurveyList!!.size}개"
+//        }
 
 
         // Initiate Room DB

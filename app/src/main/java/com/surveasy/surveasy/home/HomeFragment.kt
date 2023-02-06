@@ -13,13 +13,12 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.amplitude.api.Amplitude
-import com.surveasy.surveasy.MainActivity
 
-import com.surveasy.surveasy.R
 import com.surveasy.surveasy.list.*
 import com.surveasy.surveasy.login.*
 import com.surveasy.surveasy.home.Opinion.HomeOpinionDetailActivity
@@ -38,6 +37,7 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.ListResult
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
+import com.surveasy.surveasy.*
 import com.surveasy.surveasy.databinding.FragmentHomeBinding
 import com.surveasy.surveasy.home.Opinion.HomeOpinionAnswerActivity
 import com.surveasy.surveasy.home.Opinion.HomeOpinionAnswerViewModel
@@ -72,6 +72,8 @@ class HomeFragment : Fragment() {
     private val answerModel by activityViewModels<HomeOpinionAnswerViewModel>()
     private val model by activityViewModels<SurveyInfoViewModel>()
 
+    private lateinit var mainViewModel: MainViewModel
+    private lateinit var mainViewModelFactory : MainViewModelFactory
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -90,28 +92,54 @@ class HomeFragment : Fragment() {
 
         val container : RecyclerView? = view.findViewById(R.id.homeList_recyclerView)
 
+
+
+        mainViewModelFactory = MainViewModelFactory(MainRepository())
+        mainViewModel = ViewModelProvider(this, mainViewModelFactory)[MainViewModel::class.java]
+        CoroutineScope(Dispatchers.Main).launch {
+
+//            //user info fetch
+//            mainViewModel.fetchCurrentUser(Firebase.auth.currentUser!!.uid)
+//            mainViewModel.repositories1.observe(viewLifecycleOwner){
+////                Log.d(TAG, "onCreate: fragment###${it.name}")
+//            }
+
+            //banner fetch
+            mainViewModel.fetchBannerImg()
+            mainViewModel.repositories2.observe(viewLifecycleOwner){
+//                Log.d(TAG, "onCreateView: $it")
+                binding.HomeBannerDefault.visibility = View.INVISIBLE
+                binding.textViewTotalBanner.text = it.size.toString()
+                bannerPager.offscreenPageLimit = it.size
+                bannerPager.adapter = BannerViewPagerAdapter(mContext, it)
+                bannerPager.orientation = ViewPager2.ORIENTATION_HORIZONTAL
+            }
+        }
+
+
+
         // Banner init
         bannerPager = view.findViewById(R.id.Home_BannerViewPager)
         val bannerDefault : ImageView = view.findViewById(R.id.Home_BannerDefault)
-
-        Glide.with(this@HomeFragment).load(R.raw.app_loading).into(binding.HomeBannerDefault)
-        CoroutineScope(Dispatchers.Main).launch {
-            val banner = CoroutineScope(Dispatchers.IO).async {
-                while (bannerModel.uriList.size == 0) {
-                    //bannerDefault.visibility = View.VISIBLE
-                }
-                binding.HomeBannerDefault.visibility = View.INVISIBLE
-                bannerModel.uriList
-
-            }.await()
-
-            binding.HomeBannerDefault.visibility = View.INVISIBLE
-            binding.textViewTotalBanner.text = bannerModel.num.toString()
-            bannerPager.offscreenPageLimit = bannerModel.num
-            bannerPager.adapter = BannerViewPagerAdapter(mContext, bannerModel.uriList)
-            bannerPager.orientation = ViewPager2.ORIENTATION_HORIZONTAL
-
-        }
+//
+//        Glide.with(this@HomeFragment).load(R.raw.app_loading).into(binding.HomeBannerDefault)
+//        CoroutineScope(Dispatchers.Main).launch {
+//            val banner = CoroutineScope(Dispatchers.IO).async {
+//                while (bannerModel.uriList.size == 0) {
+//                    //bannerDefault.visibility = View.VISIBLE
+//                }
+//                binding.HomeBannerDefault.visibility = View.INVISIBLE
+//                bannerModel.uriList
+//
+//            }.await()
+//
+//            binding.HomeBannerDefault.visibility = View.INVISIBLE
+//            binding.textViewTotalBanner.text = bannerModel.num.toString()
+//            bannerPager.offscreenPageLimit = bannerModel.num
+//            bannerPager.adapter = BannerViewPagerAdapter(mContext, bannerModel.uriList)
+//            bannerPager.orientation = ViewPager2.ORIENTATION_HORIZONTAL
+//
+//        }
 
 
         // Banner 넘기면 [현재 페이지/전체 페이지] 변화
@@ -247,116 +275,83 @@ class HomeFragment : Fragment() {
 
         // Contribution
         CoroutineScope(Dispatchers.Main).launch {
-            val contributionList = CoroutineScope(Dispatchers.IO).async {
-                while(contributionModel.contributionList.size == 0) { }
-                contributionModel.contributionList
-            }.await()
-
-            binding.HomeContributionRecyclerView.layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
-            binding.HomeContributionRecyclerView.adapter = ContributionItemsAdapter(contributionList)
+            mainViewModel.fetchContribution()
+            mainViewModel.repositories3.observe(viewLifecycleOwner){
+                binding.HomeContributionRecyclerView.layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+                binding.HomeContributionRecyclerView.adapter = ContributionItemsAdapter(it)
+            }
 
         }
 
 
         // Opinion
         CoroutineScope(Dispatchers.Main).launch {
-            val opinionItem = CoroutineScope(Dispatchers.IO).async {
-                while(opinionModel.opinionItem.question == null) { }
-                opinionModel.opinionItem
-            }.await()
-
-            binding.HomeOpinionTextView.text = opinionModel.opinionItem.question
-        }
-
-        binding.HomeOpinionQContainer.setOnClickListener {
-            val intent = Intent(context, HomeOpinionDetailActivity::class.java)
-            intent.putExtra("id", opinionModel.opinionItem.id)
-            intent.putExtra("question", opinionModel.opinionItem.question)
-            intent.putExtra("content1", opinionModel.opinionItem.content1)
-            intent.putExtra("content2", opinionModel.opinionItem.content2)
-            startActivity(intent)
-
-            // [Amplitude] Poll View Showed
-            val client = Amplitude.getInstance()
-            client.logEvent("Poll View Showed")
-        }
-
-
-
-        //null 오류 다시 체크
-        CoroutineScope(Dispatchers.Main).launch {
-            val list : Int? = CoroutineScope(Dispatchers.IO).async {
-                val model by activityViewModels<HomeOpinionAnswerViewModel>()
-                while (model.homeAnswerList.size == 0) {
-                    //Log.d(TAG, "########loading")
+            mainViewModel.fetchOpinion()
+            mainViewModel.repositories4.observe(viewLifecycleOwner){ data->
+                binding.HomeOpinionTextView.text = data.question
+                binding.HomeOpinionQContainer.setOnClickListener {
+                    val intent = Intent(context, HomeOpinionDetailActivity::class.java)
+                    intent.putExtra("id", data.id)
+                    intent.putExtra("question", data.question)
+                    intent.putExtra("content1", data.content1)
+                    intent.putExtra("content2", data.content2)
+                    startActivity(intent)
                 }
-//                model.homeAnswerList.get(0).id
-                1
 
-            }.await()
+            }
+            mainViewModel.repositories5.observe(viewLifecycleOwner){ data->
+                activity?.runOnUiThread(Runnable {
+                    if(data.get(left).id==2){
 
-            activity?.runOnUiThread(Runnable {
-                if(answerModel.homeAnswerList.get(left).id==2){
+                    }
+                    binding.HomeOpinionAnswerTitleL.text = data.get(left).question.toString()
+                    binding.HomeOpinionAnswerTitleR.text = data.get(right).question.toString()
 
-                }
-                binding.HomeOpinionAnswerTitleL.text = answerModel.homeAnswerList.get(left).question.toString()
-                binding.HomeOpinionAnswerTitleR.text = answerModel.homeAnswerList.get(right).question.toString()
+                    binding.HomeOpinionR.setOnClickListener{
+                        if(right<data.size-1){
+                            left++
+                            right++
+                            binding.HomeOpinionAnswerTitleL.text = data.get(left).question.toString()
+                            binding.HomeOpinionAnswerTitleR.text = data.get(right).question.toString()
+                        }
 
-                binding.HomeOpinionR.setOnClickListener{
-                    if(right<answerModel.homeAnswerList.size-1){
-                        left++
-                        right++
-                        binding.HomeOpinionAnswerTitleL.text = answerModel.homeAnswerList.get(left).question.toString()
-                        binding.HomeOpinionAnswerTitleR.text = answerModel.homeAnswerList.get(right).question.toString()
+                    }
+                    binding.HomeOpinionL.setOnClickListener{
+                        if(left>0){
+                            left--
+                            right--
+                            binding.HomeOpinionAnswerTitleL.text = data.get(left).question.toString()
+                            binding.HomeOpinionAnswerTitleR.text = data.get(right).question.toString()
+                        }
+
+                    }
+                })
+                binding.HomePollAnswerContainerL.setOnClickListener {
+                    if(data.get(left).id!=2){
+                        val intent = Intent(context, HomeOpinionAnswerActivity::class.java)
+                        intent.putExtra("id", data.get(left).id)
+                        intent.putExtra("content1",data.get(left).content1)
+                        intent.putExtra("content2",data.get(left).content2)
+                        intent.putExtra("content3",data.get(left).content3)
+
+                        putAnswerItemNum(intent, data.get(left).id)
+
                     }
 
                 }
-                binding.HomeOpinionL.setOnClickListener{
-                    if(left>0){
-                        left--
-                        right--
-                        binding.HomeOpinionAnswerTitleL.text = answerModel.homeAnswerList.get(left).question.toString()
-                        binding.HomeOpinionAnswerTitleR.text = answerModel.homeAnswerList.get(right).question.toString()
+                binding.HomePollAnswerContainerR.setOnClickListener {
+                    if(data.get(right).id!=2){
+                        val intent = Intent(context, HomeOpinionAnswerActivity::class.java)
+                        intent.putExtra("id", data.get(right).id)
+                        intent.putExtra("content1",data.get(right).content1)
+                        intent.putExtra("content2",data.get(right).content2)
+                        intent.putExtra("content3",data.get(right).content3)
+
+                        putAnswerItemNum(intent, data.get(right).id)
                     }
-
                 }
-            })
-        }
-
-
-        binding.HomePollAnswerContainerL.setOnClickListener {
-            if(answerModel.homeAnswerList.get(left).id!=2){
-                val intent = Intent(context, HomeOpinionAnswerActivity::class.java)
-                intent.putExtra("id", answerModel.homeAnswerList.get(left).id)
-                intent.putExtra("content1",answerModel.homeAnswerList.get(left).content1)
-                intent.putExtra("content2",answerModel.homeAnswerList.get(left).content2)
-                intent.putExtra("content3",answerModel.homeAnswerList.get(left).content3)
-
-                putAnswerItemNum(intent, answerModel.homeAnswerList.get(left).id)
 
             }
-
-
-            // [Amplitude] Poll_Answer View Showed
-            val client = Amplitude.getInstance()
-            client.logEvent("Poll_Answer View Showed")
-        }
-
-
-        binding.HomePollAnswerContainerR.setOnClickListener {
-            if(answerModel.homeAnswerList.get(right).id!=2){
-                val intent = Intent(context, HomeOpinionAnswerActivity::class.java)
-                intent.putExtra("id", answerModel.homeAnswerList.get(right).id)
-                intent.putExtra("content1",answerModel.homeAnswerList.get(right).content1)
-                intent.putExtra("content2",answerModel.homeAnswerList.get(right).content2)
-                intent.putExtra("content3",answerModel.homeAnswerList.get(right).content3)
-
-                putAnswerItemNum(intent, answerModel.homeAnswerList.get(right).id)
-            }
-
-            // [Amplitude] Poll_Answer View Showed
-            val client = Amplitude.getInstance()
-            client.logEvent("Poll_Answer View Showed")
         }
 
             return view

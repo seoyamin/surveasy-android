@@ -105,7 +105,7 @@ class MainActivity : AppCompatActivity() {
 
         //fetchBanner()
         //fetchCurrentUser(Firebase.auth.currentUser!!.uid)
-        fetchSurvey()
+        //fetchSurvey()
         //fetchContribution()
         //fetchOpinion()
 
@@ -136,6 +136,19 @@ class MainActivity : AppCompatActivity() {
                 else if(uidNum == 1) {
                     userDB.userDao().updateFcm(it.uid.toString(),it.fcmToken.toString())
                 }
+            }
+        }
+        
+        //survey fetch
+        CoroutineScope(Dispatchers.Main).launch {
+            // [Targeting] Room DB에서 User info 가져오기
+            val birthYear = userDB.userDao().getBirth()
+            val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+            age = currentYear - birthYear + 1
+            gender = userDB.userDao().getGender()
+            mainViewModel.fetchSurvey(20, "여")
+            mainViewModel.repositories6.observe(this@MainActivity){
+                Log.d(TAG, "onCreate: 66666${it.get(0)}")
             }
         }
 

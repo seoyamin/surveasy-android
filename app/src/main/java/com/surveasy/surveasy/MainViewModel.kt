@@ -12,6 +12,7 @@ import com.surveasy.surveasy.login.CurrentUser
 import com.surveasy.surveasy.model.ContributionModel
 import com.surveasy.surveasy.model.OpinionAModel
 import com.surveasy.surveasy.model.OpinionQModel
+import com.surveasy.surveasy.model.SurveyModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -33,6 +34,9 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
     private val _repositoriesFetchOpinionA = MutableLiveData<List<OpinionAModel>>()
     val repositories5 : MutableLiveData<List<OpinionAModel>>
         get() = _repositoriesFetchOpinionA
+    private val _repositoriesFetchSurvey = MutableLiveData<ArrayList<SurveyModel>>()
+    val repositories6 : MutableLiveData<ArrayList<SurveyModel>>
+        get() = _repositoriesFetchSurvey
 
     private val db = Firebase.firestore
 
@@ -44,6 +48,12 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
         viewModelScope.launch {
             repository.fetchCurrentUser(uid, _repositoriesFetchCurrentUser)
 
+        }
+    }
+
+    suspend fun fetchSurvey(userAge : Int, userGender : String){
+        viewModelScope.launch {
+            repository.fetchSurvey(_repositoriesFetchSurvey, userAge, userGender)
         }
     }
 

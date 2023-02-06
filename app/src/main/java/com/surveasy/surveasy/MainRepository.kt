@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.amplitude.api.Amplitude
 import com.google.android.gms.tasks.Task
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
@@ -19,6 +20,7 @@ import com.surveasy.surveasy.login.CurrentUser
 import com.surveasy.surveasy.model.ContributionModel
 import com.surveasy.surveasy.model.OpinionAModel
 import com.surveasy.surveasy.model.OpinionQModel
+import com.surveasy.surveasy.model.SurveyModel
 import com.surveasy.surveasy.userRoom.User
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -86,6 +88,172 @@ class MainRepository : MainRepositoryInterface {
 
     }
 
+    //fetch survey
+    override suspend fun fetchSurvey(model: MutableLiveData<ArrayList<SurveyModel>>, userAge: Int, userGender: String) {
+        var surveyList = ArrayList<SurveyModel>()
+        db.collection("surveyData")
+            .orderBy("lastIDChecked", Query.Direction.DESCENDING)
+            .limit(18).get()
+            .addOnSuccessListener { result ->
+                for (document in result) {
+
+                    // [case 1] 타겟팅 추가 이후 설문
+                    if(document["targetingAge"] != null && document["targetingGender"] != null) {
+                        val targetingAge = Integer.parseInt(document["targetingAge"].toString()) as Int
+                        val targetingGender = Integer.parseInt(document["targetingGender"].toString()) as Int
+
+                        if(checkTargeting(userAge, userGender, targetingAge, targetingGender)) {
+                            if(document["panelReward"] != null) {
+                                val item = SurveyModel(
+                                    Integer.parseInt(document["id"].toString()) as Int,
+                                    Integer.parseInt(document["lastIDChecked"].toString()) as Int,
+                                    document["title"] as String,
+                                    document["target"] as String,
+                                    document["uploadDate"] as String?,
+                                    document["link"] as String?,
+                                    document["spendTime"] as String?,
+                                    document["dueDate"] as String?,
+                                    document["dueTimeTime"] as String?,
+                                    Integer.parseInt(document["panelReward"].toString()),
+                                    document["noticeToPanel"] as String?,
+                                    Integer.parseInt(document["progress"].toString()),
+                                    Integer.parseInt(document["targetingAge"].toString()) as Int,
+                                    Integer.parseInt(document["targetingGender"].toString()) as Int,
+                                )
+                                surveyList.add(item)
+                            }
+                        }
+
+
+                    }
+
+                    // [case 2] 타겟팅 추가 이전 설문
+                    else {
+                        if(document["panelReward"] != null) {
+                            val item = SurveyModel(
+                                Integer.parseInt(document["id"].toString()) as Int,
+                                Integer.parseInt(document["lastIDChecked"].toString()) as Int,
+                                document["title"] as String,
+                                document["target"] as String,
+                                document["uploadDate"] as String?,
+                                document["link"] as String?,
+                                document["spendTime"] as String?,
+                                document["dueDate"] as String?,
+                                document["dueTimeTime"] as String?,
+                                Integer.parseInt(document["panelReward"].toString()),
+                                document["noticeToPanel"] as String?,
+                                Integer.parseInt(document["progress"].toString()),
+                                1,
+                                1
+                            )
+                            surveyList.add(item)
+                        }
+                    }
+
+                }
+
+                model.postValue(surveyList)
+            }
+            .addOnFailureListener { exception ->
+                Log.d(TAG, "fail $exception")
+            }
+    }
+
+    private fun checkTargeting(userAge : Int, userGender : String, targetingAge : Int, targetingGender : Int) : Boolean {
+
+        // [case 1] 타겟팅 없는 설문
+        if(targetingAge <= 1 && targetingGender <= 1) return true
+
+        // [case 2] 타겟팅 있는 설문
+        else  {
+            when(targetingAge) {
+                2 ->  if(userAge < 20 || userAge > 29) return false
+                3 ->  if(userAge < 20 || userAge > 24) return false
+                4 ->  if(userAge < 25 || userAge > 29) return false
+                5 ->  if(userAge < 20 || userAge > 39) return false
+                6 ->  if(userAge < 20 || userAge > 49) return false
+            }
+
+            when(targetingGender) {
+                2 ->  if(userGender == "여") return false
+                3 ->  if(userGender == "남") return false
+            }
+        }
+
+        return true
+    }
+    /*
+    // Fetch from FB
+        db.collection("surveyData")
+            .orderBy("lastIDChecked", Query.Direction.DESCENDING)
+            .limit(18).get()
+            .addOnSuccessListener { result ->
+                for (document in result) {
+
+                    // [case 1] 타겟팅 추가 이후 설문
+                    if(document["targetingAge"] != null && document["targetingGender"] != null) {
+                        val targetingAge = Integer.parseInt(document["targetingAge"].toString()) as Int
+                        val targetingGender = Integer.parseInt(document["targetingGender"].toString()) as Int
+
+                        if(checkTargeting(targetingAge, targetingGender)) {
+                            if(document["panelReward"] != null) {
+                                val item: SurveyItems = SurveyItems(
+                                    Integer.parseInt(document["id"].toString()) as Int,
+                                    Integer.parseInt(document["lastIDChecked"].toString()) as Int,
+                                    document["title"] as String,
+                                    document["target"] as String,
+                                    document["uploadDate"] as String?,
+                                    document["link"] as String?,
+                                    document["spendTime"] as String?,
+                                    document["dueDate"] as String?,
+                                    document["dueTimeTime"] as String?,
+                                    Integer.parseInt(document["panelReward"].toString()),
+                                    document["noticeToPanel"] as String?,
+                                    Integer.parseInt(document["progress"].toString()),
+                                    Integer.parseInt(document["targetingAge"].toString()) as Int,
+                                    Integer.parseInt(document["targetingGender"].toString()) as Int,
+                                )
+                                surveyList.add(item)
+                            }
+                        }
+
+
+                    }
+
+                    // [case 2] 타겟팅 추가 이전 설문
+                    else {
+                        if(document["panelReward"] != null) {
+                            val item: SurveyItems = SurveyItems(
+                                Integer.parseInt(document["id"].toString()) as Int,
+                                Integer.parseInt(document["lastIDChecked"].toString()) as Int,
+                                document["title"] as String,
+                                document["target"] as String,
+                                document["uploadDate"] as String?,
+                                document["link"] as String?,
+                                document["spendTime"] as String?,
+                                document["dueDate"] as String?,
+                                document["dueTimeTime"] as String?,
+                                Integer.parseInt(document["panelReward"].toString()),
+                                document["noticeToPanel"] as String?,
+                                Integer.parseInt(document["progress"].toString()),
+                                1,
+                                1
+                            )
+                            surveyList.add(item)
+                        }
+                    }
+
+                }
+
+                model.surveyInfo.addAll(surveyList)
+            }
+            .addOnFailureListener { exception ->
+                Log.d(TAG, "fail $exception")
+            }
+
+
+     */
+
 
     // Get banner img uri from Firebase Storage
     override suspend fun fetchBannerImg(model : MutableLiveData<ArrayList<String>>) {
@@ -135,11 +303,9 @@ class MainRepository : MainRepositoryInterface {
 
             }
     }
-    private fun fetchContribution() {
 
 
-    }
-
+    //fetch opinion
     override suspend fun fetchOpinion(model1 : MutableLiveData<OpinionQModel>, model2 : MutableLiveData<List<OpinionAModel>>) {
         db.collection("AppOpinion").whereEqualTo("isValid", true)
             .get().addOnCompleteListener{ documents ->

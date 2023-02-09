@@ -90,6 +90,11 @@ class SurveyListFirstSurvey2Fragment() : Fragment() {
         return view
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
     private fun firstSurveyFin() {
         if(city == "시/도") {
             Toast.makeText(context, "시/도를 선택해주세요.", Toast.LENGTH_SHORT).show()

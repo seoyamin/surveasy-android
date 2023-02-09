@@ -8,25 +8,23 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import com.surveasy.surveasy.R
+import com.surveasy.surveasy.databinding.FragmentRegisterfinBinding
 import com.surveasy.surveasy.login.LoginActivity
 
 
 class RegisterFinFragment : Fragment() {
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
+    private var _binding : FragmentRegisterfinBinding? = null
+    private val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-
-        val view = inflater.inflate(R.layout.fragment_registerfin,container,false)
+        _binding = FragmentRegisterfinBinding.inflate(layoutInflater)
+        val view = binding.root
         (activity as RegisterActivity).toolbarHide()
 
-        val registerFin_Btn : Button = view!!.findViewById(R.id.RegisterFinFragment_Btn)
-        registerFin_Btn.setOnClickListener {
+        binding.RegisterFinFragmentBtn.setOnClickListener {
             val intent : Intent = Intent(context, LoginActivity::class.java)
             (activity as RegisterActivity).fin()
             startActivity(intent)
@@ -34,6 +32,10 @@ class RegisterFinFragment : Fragment() {
         }
 
         return view
+    }
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
 

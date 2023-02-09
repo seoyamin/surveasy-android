@@ -11,6 +11,7 @@ import android.widget.*
 import androidx.fragment.app.activityViewModels
 import com.surveasy.surveasy.R
 import com.google.firebase.auth.FirebaseAuth
+import com.surveasy.surveasy.databinding.FragmentRegister1Binding
 import java.util.*
 
 
@@ -21,20 +22,21 @@ class Register1Fragment : Fragment() {
     var birthDate: String? = null
     var inflowPath: String? = null
     var cal = Calendar.getInstance()
+    private var _binding : FragmentRegister1Binding? = null
+    private val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-
-        val view = inflater.inflate(R.layout.fragment_register1, container, false)
+        _binding = FragmentRegister1Binding.inflate(layoutInflater)
+        val view = binding.root
 
         setInflowPathSpinner(view)
 
 
         // gender
-        val genderRadioGroup = view.findViewById<RadioGroup>(R.id.RegisterFragment1_RadioGroup)
-        genderRadioGroup.setOnCheckedChangeListener { genderRadioGroup, checkedId ->
+        binding.RegisterFragment1RadioGroup.setOnCheckedChangeListener { genderRadioGroup, checkedId ->
             when (checkedId) {
                 R.id.RegisterFragment1_RadioMale -> gender = "남"
                 R.id.RegisterFragment1_RadioFemale -> gender = "여"
@@ -45,9 +47,7 @@ class Register1Fragment : Fragment() {
         // BirthDate
         birthDate = initYearPicker(view) + "-" + initMonthPicker(view) + "-" + initDayPicker(view)
 
-
-        val registerFragment1Btn: Button = view.findViewById(R.id.RegisterFragment1_Btn)
-        registerFragment1Btn.setOnClickListener {
+        binding.RegisterFragment1Btn.setOnClickListener {
             auth = FirebaseAuth.getInstance()
             register1(view)
         }
@@ -55,15 +55,20 @@ class Register1Fragment : Fragment() {
         return view
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
 
     // Register1
     private fun register1(view: View) {
-        val name: String = view.findViewById<EditText>(R.id.RegisterFragment1_NameInput).text.toString()
-        val email: String = view.findViewById<EditText>(R.id.RegisterFragment1_EmailInput).text.toString()
-        val password = view.findViewById<EditText>(R.id.RegisterFragment1_PwInput).text.toString()
-        val passwordCheck = view.findViewById<EditText>(R.id.RegisterFragment1_PwCheckInput).text.toString()
-        val phoneNumber: String = view.findViewById<EditText>(R.id.RegisterFragment1_PhoneNumberInput).text.toString()
-        if(inflowPath == "기타" || inflowPath == "") inflowPath = view.findViewById<EditText>(R.id.RegisterFragment1_EtcInflowInput).text.toString()
+        val name: String = binding.RegisterFragment1NameInput.text.toString()
+        val email: String = binding.RegisterFragment1EmailInput.text.toString()
+        val password = binding.RegisterFragment1PwInput.text.toString()
+        val passwordCheck = binding.RegisterFragment1PwCheckInput.text.toString()
+        val phoneNumber: String = binding.RegisterFragment1PhoneNumberInput.text.toString()
+        if(inflowPath == "기타" || inflowPath == "") inflowPath = binding.RegisterFragment1EtcInflowInput.text.toString()
         birthDate = initYearPicker(view) + "-" + initMonthPicker(view) + "-" + initDayPicker(view)
 
         if(name == "") {
@@ -119,38 +124,35 @@ class Register1Fragment : Fragment() {
     private fun initYearPicker(view: View): String {
         val today = Calendar.getInstance()
         val currentYear = today.get(Calendar.YEAR)
-        val numberPicker = view.findViewById<NumberPicker>(R.id.RegisterFragment1_Year)
 //        numberPicker.minValue = currentYear - 35
-        numberPicker.minValue = 1950
-        numberPicker.maxValue = currentYear
-        numberPicker.wrapSelectorWheel = false
+        binding.RegisterFragment1Year.minValue = 1950
+        binding.RegisterFragment1Year.maxValue = currentYear
+        binding.RegisterFragment1Year.wrapSelectorWheel = false
 
-        var year : Int = numberPicker.minValue
-        year = numberPicker.value
+        var year : Int = binding.RegisterFragment1Year.minValue
+        year = binding.RegisterFragment1Year.value
         return year.toString()
     }
 
     private fun initMonthPicker(view: View): String {
-        val numberPicker = view.findViewById<NumberPicker>(R.id.RegisterFragment1_Month)
-        numberPicker.minValue = 1
-        numberPicker.maxValue = 12
-        numberPicker.wrapSelectorWheel = false
+        binding.RegisterFragment1Month.minValue = 1
+        binding.RegisterFragment1Month.maxValue = 12
+        binding.RegisterFragment1Month.wrapSelectorWheel = false
 
-        var month : Int = numberPicker.minValue
-        month = numberPicker.value
+        var month : Int = binding.RegisterFragment1Month.minValue
+        month = binding.RegisterFragment1Month.value
         var monthStr: String = month.toString()
         if (month < 10) monthStr = "0" + monthStr
         return monthStr
     }
 
     private fun initDayPicker(view: View): String {
-        val numberPicker = view.findViewById<NumberPicker>(R.id.RegisterFragment1_Date)
-        numberPicker.minValue = 1
-        numberPicker.maxValue = 31
-        numberPicker.wrapSelectorWheel = false
+        binding.RegisterFragment1Date.minValue = 1
+        binding.RegisterFragment1Date.maxValue = 31
+        binding.RegisterFragment1Date.wrapSelectorWheel = false
 
-        var day : Int = numberPicker.minValue
-        day = numberPicker.value
+        var day : Int = binding.RegisterFragment1Date.minValue
+        day = binding.RegisterFragment1Date.value
         var dayStr: String = day.toString()
         if (day < 10) dayStr = "0" + dayStr
         return dayStr
@@ -159,18 +161,16 @@ class Register1Fragment : Fragment() {
     private fun setInflowPathSpinner(view: View) {
         val inflowPathList = resources.getStringArray(R.array.inflowPath)
         val inflowPathAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, inflowPathList)
-        val inflowPathSpinner : Spinner = view.findViewById(R.id.RegisterFragment1_InflowPathSpinner)
-        val etcInflowPathContainer : LinearLayout = view.findViewById(R.id.EtcInflowPath_Container)
 
-        inflowPathSpinner.adapter = inflowPathAdapter
-        inflowPathSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+        binding.RegisterFragment1InflowPathSpinner.adapter = inflowPathAdapter
+        binding.RegisterFragment1InflowPathSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 inflowPath = inflowPathList[position]
 //                Log.d(TAG, "@@@@@@@ inflow : $inflowPath")
                 if(inflowPath == "기타") {
-                    etcInflowPathContainer.visibility = View.VISIBLE
+                    binding.EtcInflowPathContainer.visibility = View.VISIBLE
                 }
-                else etcInflowPathContainer.visibility = View.GONE
+                else binding.EtcInflowPathContainer.visibility = View.GONE
             }
             override fun onNothingSelected(p0: AdapterView<*>?) {
             }

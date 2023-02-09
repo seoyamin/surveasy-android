@@ -10,19 +10,21 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.activityViewModels
 import com.surveasy.surveasy.R
+import com.surveasy.surveasy.databinding.FragmentMyviewinfo1Binding
 
 
 class MyViewInfo1Fragment : Fragment() {
     val infoDataModel by activityViewModels<InfoDataViewModel>()
     val set: Boolean = false
-
-
+    private var _binding : FragmentMyviewinfo1Binding? = null
+    private val binding get() = _binding!!
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        _binding = FragmentMyviewinfo1Binding.inflate(layoutInflater)
         // (activity as MyViewInfoActivity).fetchInfoData()
-        val view = inflater.inflate(R.layout.fragment_myviewinfo1, container, false)
+        val view = binding.root
 
         setVariableInfo(view, infoDataModel.infoData)
 
@@ -30,21 +32,21 @@ class MyViewInfo1Fragment : Fragment() {
 
     }
 
-    private fun setVariableInfo(view: View, infoData: InfoData) {
-        val phoneNumber = view.findViewById<TextView>(R.id.MyViewInfo_InfoItem_PhoneNumber)
-        val accountType = view.findViewById<TextView>(R.id.MyViewInfo_InfoItem_AccountType)
-        val accountNumber = view.findViewById<TextView>(R.id.MyViewInfo_InfoItem_AccountNumber)
-        val EngSurvey = view.findViewById<TextView>(R.id.MyViewInfo_InfoItem_EngSurvey)
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 
-        phoneNumber.text = infoData.phoneNumber
-        accountType.text = infoData.accountType
-        accountNumber.text = infoData.accountNumber
+    private fun setVariableInfo(view: View, infoData: InfoData) {
+        binding.MyViewInfoInfoItemPhoneNumber.text = infoData.phoneNumber
+        binding.MyViewInfoInfoItemAccountType.text = infoData.accountType
+        binding.MyViewInfoInfoItemAccountNumber.text = infoData.accountNumber
 
         if(infoData.EngSurvey == true) {
-            EngSurvey.text = "희망함"
+            binding.MyViewInfoInfoItemEngSurvey.text = "희망함"
         }
         else if(infoData.EngSurvey == false) {
-            EngSurvey.text = "희망하지 않음"
+            binding.MyViewInfoInfoItemEngSurvey.text = "희망하지 않음"
         }
     }
 

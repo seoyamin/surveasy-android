@@ -28,6 +28,7 @@ import com.google.firebase.ktx.Firebase
 import com.surveasy.surveasy.MainRepository
 import com.surveasy.surveasy.MainViewModel
 import com.surveasy.surveasy.MainViewModelFactory
+import com.surveasy.surveasy.databinding.FragmentMyviewBinding
 import com.surveasy.surveasy.my.notice.*
 import com.surveasy.surveasy.my.notice.noticeRoom.NoticeDatabase
 import kotlinx.coroutines.*
@@ -42,9 +43,13 @@ class MyViewFragment : Fragment() {
     val userModel by activityViewModels<CurrentUserViewModel>()
     private lateinit var noticeDB : NoticeDatabase
 
+    private var _binding : FragmentMyviewBinding? = null
+    private val binding get() = _binding!!
+
     private lateinit var mainViewModel: MainViewModel
     private lateinit var mainViewModelFactory : MainViewModelFactory
 
+    // 여기 다시 확인
     override fun onStart() {
         super.onStart()
         val infoIcon = requireView().findViewById<LinearLayout>(R.id.MyView_InfoIcon)
@@ -96,15 +101,6 @@ class MyViewFragment : Fragment() {
             }
         }
 
-        // Set UI with userModel
-//        if(userModel.currentUser.uid != null) {
-//            userName.text = "${userModel.currentUser.name}님"
-//            val rewardFin = (userModel.currentUser.rewardTotal!!) - (userModel.currentUser.rewardCurrent!!)
-//            userRewardFinAmount.text = "${rewardFin}원"
-//            userRewardYetAmount.text = "${userModel.currentUser.rewardCurrent}원"
-//            userSurveyCountAmount.text = "${userModel.currentUser.UserSurveyList!!.size}개"
-//        }
-
 
         // Initiate Room DB
         noticeDB = Room.databaseBuilder(
@@ -133,23 +129,11 @@ class MyViewFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-
-        val view = inflater.inflate(R.layout.fragment_myview, container, false)
+        _binding = FragmentMyviewBinding.inflate(layoutInflater)
+        val view = binding.root
         val userModel by activityViewModels<CurrentUserViewModel>()
 
-        val noticeBtn = view.findViewById<ImageView>(R.id.MyView_NoticeIcon)
-        val noticeDot = view.findViewById<ImageView>(R.id.MyView_NoticeIcon_dot)
-        val historyIcon = view.findViewById<LinearLayout>(R.id.MyView_HistoryIcon)
-        val infoIcon = view.findViewById<LinearLayout>(R.id.MyView_InfoIcon)
-        val settingIcon = view.findViewById<LinearLayout>(R.id.MyView_SettingIcon)
-        val contactIcon = view.findViewById<LinearLayout>(R.id.MyView_ContactIcon)
-
-        val userName = view.findViewById<TextView>(R.id.MyView_UserName)
-        val userRewardFinAmount = view.findViewById<TextView>(R.id.MyView_UserRewardFinAmount)
-        val userRewardYetAmount = view.findViewById<TextView>(R.id.MyView_UserRewardYetAmount)
-        val userSurveyCountAmount = view.findViewById<TextView>(R.id.MyView_UserSurveyCountAmount)
-
-        userName.setOnClickListener{
+        binding.MyViewUserName.setOnClickListener{
             noticeDB.noticeDao().deleteAll()
         }
 
@@ -164,10 +148,10 @@ class MyViewFragment : Fragment() {
 
         CoroutineScope(Dispatchers.Main).launch {
             val notice = CoroutineScope(Dispatchers.IO).async {
-                fetchNoticeNum(noticeDot)
+                fetchNoticeNum(binding.MyViewNoticeIconDot)
             }.await()
 
-            noticeBtn.setOnClickListener {
+            binding.MyViewNoticeIcon.setOnClickListener {
                 val intent = Intent(context, MyViewNoticeListActivity::class.java)
                 intent.putExtra("noticeDiff", noticeNum_fb - noticeNum_room)
                 intent.putExtra("notice_room", noticeNum_room)
@@ -175,15 +159,12 @@ class MyViewFragment : Fragment() {
             }
         }
 
-
-
-
-        historyIcon.setOnClickListener {
+        binding.MyViewHistoryIcon.setOnClickListener {
             val intent = Intent(context, MyViewHistoryActivity::class.java)
             startActivity(intent)
         }
 
-        settingIcon.setOnClickListener {
+        binding.MyViewSettingIcon.setOnClickListener {
             val intent = Intent(context, MyViewSettingActivity::class.java)
             intent.putExtra("reward_current", userModel.currentUser.rewardCurrent)
             startActivity(intent)
@@ -194,13 +175,18 @@ class MyViewFragment : Fragment() {
 
         }
 
-        contactIcon.setOnClickListener {
+        binding.MyViewContactIcon.setOnClickListener {
             val intent = Intent(context, MyViewContactActivity::class.java)
             startActivity(intent)
         }
 
             return view
         }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 
 
     // Fetch info of current User for MyViewInfo

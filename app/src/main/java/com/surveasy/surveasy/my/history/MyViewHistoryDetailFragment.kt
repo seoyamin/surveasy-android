@@ -1,5 +1,6 @@
 package com.surveasy.surveasy.my.history
 
+import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.ContentValues.TAG
 import android.content.Intent
@@ -19,6 +20,7 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
 import com.surveasy.surveasy.R
+import com.surveasy.surveasy.databinding.FragmentMyViewHisotryDetailBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -28,44 +30,45 @@ import org.w3c.dom.Text
 class MyViewHistoryDetailFragment : Fragment() {
     val storage = Firebase.storage
     val model by activityViewModels<MyViewHistoryDetailViewModel>()
+    private var _binding : FragmentMyViewHisotryDetailBinding? = null
+    private val binding get() = _binding!!
 
+    @SuppressLint("SetTextI18n")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_my_view_hisotry_detail, container, false)
+        _binding = FragmentMyViewHisotryDetailBinding.inflate(layoutInflater)
+        val view = binding.root
         val lastImg = view.findViewById<ImageView>(R.id.historyDetailLastCapture)
         val alert = view.findViewById<TextView>(R.id.historyDetailAlert)
         val alert2 = view.findViewById<TextView>(R.id.historyDetailAlert2)
         val uploadBtn = view.findViewById<Button>(R.id.historyDetailUploadBtn)
         val noneBtn = view.findViewById<Button>(R.id.historyDetailNoneBtn)
-        val detailTitle = view.findViewById<TextView>(R.id.historyDetailTitle)
-        val detailDate = view.findViewById<TextView>(R.id.historyDetailDate)
-        val detailReward = view.findViewById<TextView>(R.id.historyDetailReward)
 
         CoroutineScope(Dispatchers.Main).launch {
             fetchModel()
 
             if(model.detailModel[0].title.length>15){
-                detailTitle.text =
+                binding.historyDetailReward.text =
                     model.detailModel[0].title.substring(0,15)+"..."
             }else{
-                detailTitle.text = model.detailModel[0].title
+                binding.historyDetailReward.text = model.detailModel[0].title
             }
-            detailReward.text = model.detailModel[0].reward.toString()+"원"
-            detailDate.text = "참여일자 : ${model.detailModel[0].date}"
+            binding.historyDetailReward.text = model.detailModel[0].reward.toString()+"원"
+            binding.historyDetailDate.text = "참여일자 : ${model.detailModel[0].date}"
 
             if(model.progress[0].progress<3){
                 fetchLastImg(model.detailModel[0].id, model.filePath[0].filePath)
             }else{
-                lastImg.visibility = View.GONE
-                alert.visibility = View.GONE
-                alert2.visibility = View.VISIBLE
-                uploadBtn.visibility = View.GONE
-                noneBtn.visibility = View.VISIBLE
+                binding.historyDetailLastCapture.visibility = View.GONE
+                binding.historyDetailAlert.visibility = View.GONE
+                binding.historyDetailAlert2.visibility = View.VISIBLE
+                binding.historyDetailUploadBtn.visibility = View.GONE
+                binding.historyDetailNoneBtn.visibility = View.VISIBLE
             }
 
-            uploadBtn.setOnClickListener {
+            binding.historyDetailUploadBtn.setOnClickListener {
                 if(model.progress[0].progress<3){
                     val intent = Intent(context, MyViewUpdatePhotoActivity::class.java)
                     intent.putExtra("filePath", model.filePath[0].filePath)
@@ -86,6 +89,11 @@ class MyViewHistoryDetailFragment : Fragment() {
         return view
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
     private suspend fun fetchModel(){
         withContext(Dispatchers.IO){
             while (model.detailModel.size==0 || model.progress.size==0 || model.filePath.size==0){ }
@@ -95,28 +103,19 @@ class MyViewHistoryDetailFragment : Fragment() {
 
     // 기존에 첨부한 이미지 보여주기
     private fun fetchLastImg(id : Int, filePath : String?) {
-
-
-//        val storageRef: StorageReference = storage.reference.child("historyTest")
         val storageRef: StorageReference = storage.reference.child(id.toString())
-//        val file1: StorageReference = storageRef.child("surveytips2image(3).png")
         val file1: StorageReference = storageRef.child(filePath.toString())
-        val lastImg = requireView().findViewById<ImageView>(R.id.historyDetailLastCapture)
-        val alert = requireView().findViewById<TextView>(R.id.historyDetailAlert)
-        val alert2 = requireView().findViewById<TextView>(R.id.historyDetailAlert2)
-        val uploadBtn = requireView().findViewById<Button>(R.id.historyDetailUploadBtn)
-        val noneBtn = requireView().findViewById<Button>(R.id.historyDetailNoneBtn)
 
-        Glide.with(this).load(R.raw.app_loading).into(lastImg)
+        Glide.with(this).load(R.raw.app_loading).into(binding.historyDetailLastCapture)
 
         file1.downloadUrl.addOnSuccessListener { item ->
-            Glide.with(this).load(item).into(lastImg)
+            Glide.with(this).load(item).into(binding.historyDetailLastCapture)
         }.addOnFailureListener{
-            lastImg.visibility = View.GONE
-            alert.visibility = View.GONE
-            alert2.visibility = View.VISIBLE
-            uploadBtn.visibility = View.GONE
-            noneBtn.visibility = View.VISIBLE
+            binding.historyDetailLastCapture.visibility = View.GONE
+            binding.historyDetailAlert.visibility = View.GONE
+            binding.historyDetailAlert2.visibility = View.VISIBLE
+            binding.historyDetailUploadBtn.visibility = View.GONE
+            binding.historyDetailNoneBtn.visibility = View.VISIBLE
         }
     }
 

@@ -10,21 +10,22 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.activityViewModels
 import com.surveasy.surveasy.R
+import com.surveasy.surveasy.databinding.FragmentMyviewinfo2Binding
 
 
 class MyViewInfo2Fragment : Fragment() {
     val infoDataModel by activityViewModels<InfoDataViewModel>()
-
+    private var _binding : FragmentMyviewinfo2Binding? = null
+    private val binding get() = _binding!!
     override fun onStart() {
         super.onStart()
-        val engSwitch : Switch = requireView().findViewById(R.id.MyViewInfo_InfoItem_EngSurveySwitch)
         if (infoDataModel.infoData.EngSurvey == true) {
-            engSwitch.isChecked = true
-            engSwitch.text = "희망함"
+            binding.MyViewInfoInfoItemEngSurveySwitch.isChecked = true
+            binding.MyViewInfoInfoItemEngSurveySwitch.text = "희망함"
         }
         else if(infoDataModel.infoData.EngSurvey == false) {
-            engSwitch.isChecked = false
-            engSwitch.text = "희망하지 않음"
+            binding.MyViewInfoInfoItemEngSurveySwitch.isChecked = false
+            binding.MyViewInfoInfoItemEngSurveySwitch.text = "희망하지 않음"
         }
     }
 
@@ -32,35 +33,39 @@ class MyViewInfo2Fragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_myviewinfo2, container, false)
-        val engSwitch : Switch = view.findViewById(R.id.MyViewInfo_InfoItem_EngSurveySwitch)
-
+        _binding = FragmentMyviewinfo2Binding.inflate(layoutInflater)
+        val view = binding.root
         setAccountTypeSpinner(view, infoDataModel.infoData.accountType!!)
         setEditTextHint(view)
 
 
         if (infoDataModel.infoData.EngSurvey == true) {
-            engSwitch.isChecked = true
-            engSwitch.text = "희망함"
+            binding.MyViewInfoInfoItemEngSurveySwitch.isChecked = true
+            binding.MyViewInfoInfoItemEngSurveySwitch.text = "희망함"
         }
         else if(infoDataModel.infoData.EngSurvey == false) {
-            engSwitch.isChecked = false
-            engSwitch.text = "희망하지 않음"
+            binding.MyViewInfoInfoItemEngSurveySwitch.isChecked = false
+            binding.MyViewInfoInfoItemEngSurveySwitch.text = "희망하지 않음"
         }
 
-        engSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
+        binding.MyViewInfoInfoItemEngSurveySwitch.setOnCheckedChangeListener { buttonView, isChecked ->
             if(isChecked) {
                 infoDataModel.infoData.EngSurvey = true
-                engSwitch.text = "희망함"
+                binding.MyViewInfoInfoItemEngSurveySwitch.text = "희망함"
             }
             else if(!isChecked) {
                 infoDataModel.infoData.EngSurvey = false
-                engSwitch.text = "희망하지 않음"
+                binding.MyViewInfoInfoItemEngSurveySwitch.text = "희망하지 않음"
             }
         }
 
         return view
 
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     // 0번째 원소와 i번째 원소(defaultType) 자리 바꾸기 -> defaultType이 제일 먼저 보이게끔
@@ -95,9 +100,8 @@ class MyViewInfo2Fragment : Fragment() {
 
 
         val accountTypeAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, setDefaultList)
-        val accountTypeSpinner : Spinner = view.findViewById(R.id.MyViewInfo_InfoItem_AccountTypeSpinner)
-        accountTypeSpinner.adapter = accountTypeAdapter
-        accountTypeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+        binding.MyViewInfoInfoItemAccountTypeSpinner.adapter = accountTypeAdapter
+        binding.MyViewInfoInfoItemAccountTypeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 infoDataModel.infoData.accountType = accountTypeList[position]
             }
@@ -107,14 +111,11 @@ class MyViewInfo2Fragment : Fragment() {
     }
 
     private fun setEditTextHint(view: View) {
-        val phoneNumberEdit = view.findViewById<EditText>(R.id.MyViewInfo_InfoItem_PhoneNumberEdit)
-        val accountNumberEdit = view.findViewById<EditText>(R.id.MyViewInfo_InfoItem_AccountNumberEdit)
-
         val phoneNum = infoDataModel.infoData.phoneNumber.toString()
-        phoneNumberEdit.setText(phoneNum)
+        binding.MyViewInfoInfoItemPhoneNumberEdit.setText(phoneNum)
 
         val accountNum = infoDataModel.infoData.accountNumber.toString()
-        accountNumberEdit.setText(accountNum)
+        binding.MyViewInfoInfoItemAccountNumberEdit.setText(accountNum)
 
 
     }

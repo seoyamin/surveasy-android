@@ -18,6 +18,7 @@ import com.surveasy.surveasy.list.UserSurveyItem
 import com.surveasy.surveasy.list.WaitUserSurveyListViewModel
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.surveasy.surveasy.databinding.FragmentMyviewhistorywaitBinding
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,9 +27,9 @@ import kotlinx.coroutines.launch
 
 
 class MyViewHistoryWaitFragment : Fragment() {
-
-
     val db = Firebase.firestore
+    private var _binding : FragmentMyviewhistorywaitBinding? = null
+    private val binding get() = _binding!!
     //activity 내에서만 쓰이는 임시 list
     val waitTempList = arrayListOf<UserSurveyItem>()
     override fun onCreateView(
@@ -36,12 +37,9 @@ class MyViewHistoryWaitFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        _binding = FragmentMyviewhistorywaitBinding.inflate(layoutInflater)
         val waitModel by activityViewModels<WaitUserSurveyListViewModel>()
-        val view = inflater.inflate(R.layout.fragment_myviewhistorywait, container, false)
-        val container :RecyclerView? = view.findViewById(R.id.historyWaitRecyclerContainer)
-        val text : TextView = view.findViewById(R.id.historyWait_noneText)
-        val waitReward : TextView = view.findViewById(R.id.MyViewHistory_WaitAmount)
-        val waitMore : Button = view.findViewById(R.id.historyWait_moreBtn)
+        val view = binding.root
         var waitTotalReward : Int = 0
         var cnt : Int = 5
 
@@ -56,35 +54,40 @@ class MyViewHistoryWaitFragment : Fragment() {
             for(i in waitModel.waitSurvey){
                 waitTotalReward+=i.reward!!
             }
-            waitReward.text = waitTotalReward.toString() + "원"
+            binding.MyViewHistoryWaitAmount.text = waitTotalReward.toString() + "원"
 
             if(waitModel.waitSurvey.size==0){
-                text.visibility = View.VISIBLE
-                text.text = "해당 설문이 없습니다."
+                binding.historyWaitNoneText.visibility = View.VISIBLE
+                binding.historyWaitNoneText.text = "해당 설문이 없습니다."
             }
             else{
                 val adapter = WaitSurveyItemsAdapter(changeHistoryList(waitModel.waitSurvey,cnt))
-                container?.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
-                container?.adapter = WaitSurveyItemsAdapter(changeHistoryList(waitModel.waitSurvey,cnt))
+                binding.historyWaitRecyclerContainer.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
+                binding.historyWaitRecyclerContainer.adapter = WaitSurveyItemsAdapter(changeHistoryList(waitModel.waitSurvey,cnt))
             }
 
         }
 
 
-        waitMore.setOnClickListener {
+        binding.historyWaitMoreBtn.setOnClickListener {
             if(cnt>=waitModel.waitSurvey.size-1){
                 Toast.makeText(context,"불러올 수 있는 내역이 없습니다",Toast.LENGTH_SHORT).show()
             }else{
                 cnt+=5
                 val adapter = WaitSurveyItemsAdapter(changeHistoryList(waitModel.waitSurvey,cnt))
-                container?.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
-                container?.adapter = WaitSurveyItemsAdapter(changeHistoryList(waitModel.waitSurvey,cnt))
+                binding.historyWaitRecyclerContainer.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
+                binding.historyWaitRecyclerContainer.adapter = WaitSurveyItemsAdapter(changeHistoryList(waitModel.waitSurvey,cnt))
             }
 
         }
         
 
         return view
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     private fun changeHistoryList(waitSurvey : ArrayList<UserSurveyItem>, cnt : Int) : ArrayList<UserSurveyItem>{

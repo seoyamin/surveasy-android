@@ -18,6 +18,7 @@ import com.surveasy.surveasy.list.FinUserSurveyListViewModel
 import com.surveasy.surveasy.list.UserSurveyItem
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.surveasy.surveasy.databinding.FragmentMyviewhistoryfinBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -27,6 +28,8 @@ class MyViewHistoryFinFragment : Fragment() {
 
 
     val db = Firebase.firestore
+    private var _binding : FragmentMyviewhistoryfinBinding? = null
+    private val binding get() = _binding!!
     //activity 내에서만 쓰이는 임시 list
     //val finTempList = arrayListOf<UserSurveyItem>()
 
@@ -35,19 +38,15 @@ class MyViewHistoryFinFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        _binding = FragmentMyviewhistoryfinBinding.inflate(layoutInflater)
         val finModel by activityViewModels<FinUserSurveyListViewModel>()
-        val view = inflater.inflate(R.layout.fragment_myviewhistoryfin, container, false)
-        val container : RecyclerView? = view.findViewById(R.id.historyFinRecyclerContainer)
-        val text : TextView = view.findViewById(R.id.historyFin_noneText)
-        val finReward : TextView = view.findViewById(R.id.MyViewHistory_FinAmount)
-        val finMore : Button = view.findViewById(R.id.historyFin_moreBtn)
+        val view = binding.root
         var finTotalReward : Int = 0
         var cnt : Int = 5
 
         CoroutineScope(Dispatchers.Main).launch {
             CoroutineScope(Dispatchers.IO).async {
                 while(finModel.finSurvey.size==0){
-
                 }
                 finModel.finSurvey.get(0).id
             }.await()
@@ -55,33 +54,38 @@ class MyViewHistoryFinFragment : Fragment() {
             for(i in finModel.finSurvey){
                 finTotalReward+=i.reward!!
             }
-            finReward.text = finTotalReward.toString() + "원"
+            binding.MyViewHistoryFinAmount.text = finTotalReward.toString() + "원"
 
             if(finModel.finSurvey.size==0){
-                text.visibility = View.VISIBLE
-                text.text = "해당 설문이 없습니다."
+                binding.historyFinNoneText.visibility = View.VISIBLE
+                binding.historyFinNoneText.text = "해당 설문이 없습니다."
             }
             else{
                 val adapter = FinSurveyItemsAdapter(changeHistoryList(finModel.finSurvey,cnt))
-                container?.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
-                container?.adapter = FinSurveyItemsAdapter(changeHistoryList(finModel.finSurvey,cnt))
+                binding.historyFinRecyclerContainer.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
+                binding.historyFinRecyclerContainer.adapter = FinSurveyItemsAdapter(changeHistoryList(finModel.finSurvey,cnt))
             }
 
         }
 
-        finMore.setOnClickListener {
+        binding.historyFinMoreBtn.setOnClickListener {
             if(cnt>=finModel.finSurvey.size-1){
                 Toast.makeText(context,"불러올 수 있는 내역이 없습니다",Toast.LENGTH_SHORT).show()
             }else{
                 cnt+=5
                 val adapter = FinSurveyItemsAdapter(changeHistoryList(finModel.finSurvey,cnt))
-                container?.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
-                container?.adapter = FinSurveyItemsAdapter(changeHistoryList(finModel.finSurvey,cnt))
+                binding.historyFinRecyclerContainer.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
+                binding.historyFinRecyclerContainer.adapter = FinSurveyItemsAdapter(changeHistoryList(finModel.finSurvey,cnt))
             }
 
         }
 
         return view
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
 

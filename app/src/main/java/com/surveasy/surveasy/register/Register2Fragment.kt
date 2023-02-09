@@ -18,6 +18,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
+import com.surveasy.surveasy.databinding.FragmentRegister2Binding
 import java.time.LocalDate
 
 
@@ -25,25 +26,21 @@ class Register2Fragment : Fragment() {
     private lateinit var auth: FirebaseAuth
     val registerModel by activityViewModels<RegisterInfo1ViewModel>()
     private var accountType : String? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
+    private var _binding : FragmentRegister2Binding? = null
+    private val binding get() = _binding!!
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-
-        val view = inflater.inflate(R.layout.fragment_register2,container,false)
+        _binding = FragmentRegister2Binding.inflate(layoutInflater)
+        val view = binding.root
 
         // Set Spinners
         setAccountTypeSpinner(view)
 
-
-        val registerFragment2_Btn : Button = view!!.findViewById(R.id.RegisterFragment2_Btn)
-        registerFragment2_Btn.setOnClickListener {
+        binding.RegisterFragment2Btn.setOnClickListener {
             auth = FirebaseAuth.getInstance()
             register2(view)
 
@@ -52,12 +49,17 @@ class Register2Fragment : Fragment() {
         return view
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
 
     // Register2
     @RequiresApi(Build.VERSION_CODES.O)
     private fun register2(view: View) {
-        val accountNumber: String = view.findViewById<EditText>(R.id.RegisterFragment2_AccountNumberInput).text.toString()
-        val accountOwner: String = view.findViewById<EditText>(R.id.RegisterFragment2_AccountOwnerInput).text.toString()
+        val accountNumber: String = binding.RegisterFragment2AccountNumberInput.text.toString()
+        val accountOwner: String = binding.RegisterFragment2AccountOwnerInput.text.toString()
         val date : String = LocalDate.now().toString()
         if(accountType == "은행을 선택하세요") {
             Toast.makeText(context, "은행을 선택해주세요.", Toast.LENGTH_SHORT).show()
@@ -153,9 +155,8 @@ class Register2Fragment : Fragment() {
     private fun setAccountTypeSpinner(view: View) {
         val accountTypeList = resources.getStringArray(R.array.accountType)
         val accountTypeAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, accountTypeList)
-        val accountTypeSpinner : Spinner = view.findViewById(R.id.RegisterFragment2_AccountTypeSpinner)
-        accountTypeSpinner.adapter = accountTypeAdapter
-        accountTypeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+        binding.RegisterFragment2AccountTypeSpinner.adapter = accountTypeAdapter
+        binding.RegisterFragment2AccountTypeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 accountType = accountTypeList[position]
 

@@ -116,6 +116,12 @@ class MainActivity : AppCompatActivity() {
             //user info fetch
             mainViewModel.fetchCurrentUser(Firebase.auth.currentUser!!.uid)
             mainViewModel.repositories1.observe(this@MainActivity){
+                //viewModel 에 user 객체 저장
+//                val currentUser = CurrentUser(it.uid, it.fcmToken, it.name, it.email, it.phoneNumber, it.gender, it.birthDate,
+//                it.accountType, it.accountNumber, it.accountOwner, it.inflowPath, it.didFirstSurvey,
+//                    it.autoLogin, it.rewardCurrent, it.rewardTotal, it.marketingAgree, it.UserSurveyList)
+//                mainViewModel.currentUserModel = currentUser
+
                 // Local Room DB에 current user의 User 객체 저장하기
                 val uidNum = userDB.userDao().getNumUid(it.uid.toString())
 

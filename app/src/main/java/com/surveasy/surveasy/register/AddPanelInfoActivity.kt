@@ -205,7 +205,7 @@ class AddPanelInfoActivity : AppCompatActivity() {
     private fun initYearPicker(): String {
         val today = Calendar.getInstance()
         val currentYear = today.get(Calendar.YEAR)
-        val numberPicker = findViewById<NumberPicker>(R.id.addInfo_Year)
+        val numberPicker = binding.addInfoYear
 //        numberPicker.minValue = currentYear - 35
         numberPicker.minValue = 1990
         numberPicker.maxValue = currentYear
@@ -216,7 +216,7 @@ class AddPanelInfoActivity : AppCompatActivity() {
         return year.toString()
     }
     private fun initMonthPicker(): String {
-        val numberPicker = findViewById<NumberPicker>(R.id.addInfo_Month)
+        val numberPicker = binding.addInfoMonth
         numberPicker.minValue = 1
         numberPicker.maxValue = 12
         numberPicker.wrapSelectorWheel = false
@@ -229,7 +229,7 @@ class AddPanelInfoActivity : AppCompatActivity() {
     }
 
     private fun initDayPicker(): String {
-        val numberPicker = findViewById<NumberPicker>(R.id.addInfo_Date)
+        val numberPicker = binding.addInfoDate
         numberPicker.minValue = 1
         numberPicker.maxValue = 31
         numberPicker.wrapSelectorWheel = false
@@ -240,26 +240,12 @@ class AddPanelInfoActivity : AppCompatActivity() {
         if (day < 10) dayStr = "0" + dayStr
         return dayStr
     }
-//    private fun setInflowPathSpinner() {
-//        val inflowPathList = resources.getStringArray(R.array.inflowPath)
-//        val inflowPathAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, inflowPathList)
-//        val inflowPathSpinner : Spinner = findViewById(R.id.addInfo_InflowPathSpinner)
-//        inflowPathSpinner.adapter = inflowPathAdapter
-//        inflowPathSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-//            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-//                inflowPath = inflowPathList[position]
-//                Log.d(ContentValues.TAG, "@@@@@@@ inflow : $inflowPath")
-//            }
-//            override fun onNothingSelected(p0: AdapterView<*>?) {
-//            }
-//        }
-//    }
 
     private fun setInflowPathSpinner() {
         val inflowPathList = resources.getStringArray(R.array.inflowPath)
         val inflowPathAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, inflowPathList)
-        val inflowPathSpinner : Spinner = findViewById(R.id.addInfo_InflowPathSpinner)
-        val etcInflowPathContainer : LinearLayout = findViewById(R.id.addInfo_EtcInflowPath_Container)
+        val inflowPathSpinner = binding.addInfoInflowPathSpinner
+        val etcInflowPathContainer = binding.addInfoEtcInflowPathContainer
 
         inflowPathSpinner.adapter = inflowPathAdapter
         inflowPathSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -279,14 +265,11 @@ class AddPanelInfoActivity : AppCompatActivity() {
     private fun setAccountTypeSpinner() {
         val accountTypeList = resources.getStringArray(R.array.accountType)
         val accountTypeAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, accountTypeList)
-        val accountTypeSpinner : Spinner = findViewById(R.id.addInfo_AccountTypeSpinner)
+        val accountTypeSpinner = binding.addInfoAccountTypeSpinner
         accountTypeSpinner.adapter = accountTypeAdapter
         accountTypeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 accountType = accountTypeList[position]
-
-                //Toast.makeText(context, accountTypeList[position], Toast.LENGTH_SHORT).show()
-
                 Log.d(ContentValues.TAG, "@@@@@@@ account type : $accountType")
             }
             override fun onNothingSelected(p0: AdapterView<*>?) {

@@ -98,11 +98,11 @@ class HomeFragment : Fragment() {
         mainViewModel = ViewModelProvider(this, mainViewModelFactory)[MainViewModel::class.java]
         CoroutineScope(Dispatchers.Main).launch {
 
-//            //user info fetch
-//            mainViewModel.fetchCurrentUser(Firebase.auth.currentUser!!.uid)
-//            mainViewModel.repositories1.observe(viewLifecycleOwner){
-////                Log.d(TAG, "onCreate: fragment###${it.name}")
-//            }
+            //user info fetch
+            mainViewModel.fetchCurrentUser(Firebase.auth.currentUser!!.uid)
+            mainViewModel.repositories1.observe(viewLifecycleOwner){
+                Log.d(TAG, "onCreate: fragment###${it.name}")
+            }
 
             //banner fetch
             mainViewModel.fetchBannerImg()

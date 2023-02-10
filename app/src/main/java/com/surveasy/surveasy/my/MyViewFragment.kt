@@ -71,34 +71,17 @@ class MyViewFragment : Fragment() {
                 userRewardFinAmount.text = rewardFin.toString()
                 userRewardYetAmount.text = it.rewardCurrent.toString()
                 userSurveyCountAmount.text = it.UserSurveyList!!.size.toString()
+                //eng fetch
+                info = InfoData(it.name, it.birthDate, it.gender, it.email, it.phoneNumber, it.accountType, it.accountNumber, false)
+                infoIcon.setOnClickListener {
+                    val intent = Intent(context, MyViewInfoActivity::class.java)
+                    intent.putExtra("info", info)
+                    startActivity(intent)
+                }
+
             }
-        }
 
-        CoroutineScope(Dispatchers.Main).launch {
-            val myInfo = CoroutineScope(Dispatchers.IO).async {
-                fetchInfoData()
-            }.await()
 
-            infoIcon.setOnClickListener {
-                val intent = Intent(context, MyViewInfoActivity::class.java)
-                intent.putExtra("info", info!!)
-                startActivity(intent)
-            }
-        }
-
-        Log.d(TAG, "onStart: #### ${Firebase.auth.currentUser!!.uid}")
-
-        // Fetch User Info
-        CoroutineScope(Dispatchers.Main).launch {
-            val myInfo = CoroutineScope(Dispatchers.IO).async {
-                fetchInfoData()
-            }.await()
-
-            infoIcon.setOnClickListener {
-                val intent = Intent(context, MyViewInfoActivity::class.java)
-                intent.putExtra("info", info!!)
-                startActivity(intent)
-            }
         }
 
 

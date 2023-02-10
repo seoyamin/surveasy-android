@@ -11,9 +11,10 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.surveasy.surveasy.R
 import com.surveasy.surveasy.list.UserSurveyItem
+import com.surveasy.surveasy.list.UserSurveyModel
 import okhttp3.internal.wait
 
-class WaitSurveyItemsAdapter(val waitList : ArrayList<UserSurveyItem>) : RecyclerView.Adapter<WaitSurveyItemsAdapter.CustomViewHolder>() {
+class WaitSurveyItemsAdapter(val waitList : ArrayList<UserSurveyModel>) : RecyclerView.Adapter<WaitSurveyItemsAdapter.CustomViewHolder>() {
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int

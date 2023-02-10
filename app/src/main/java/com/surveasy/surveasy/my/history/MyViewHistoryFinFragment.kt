@@ -11,6 +11,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.surveasy.surveasy.R
@@ -30,6 +31,8 @@ class MyViewHistoryFinFragment : Fragment() {
     val db = Firebase.firestore
     private var _binding : FragmentMyviewhistoryfinBinding? = null
     private val binding get() = _binding!!
+    private lateinit var historyViewModel : MyHistoryViewModel
+
     //activity 내에서만 쓰이는 임시 list
     //val finTempList = arrayListOf<UserSurveyItem>()
 
@@ -43,6 +46,9 @@ class MyViewHistoryFinFragment : Fragment() {
         val view = binding.root
         var finTotalReward : Int = 0
         var cnt : Int = 5
+
+        historyViewModel = ViewModelProvider(this, MyHistoryViewModelFactory(MyHistoryRepository()))[MyHistoryViewModel::class.java]
+
 
         CoroutineScope(Dispatchers.Main).launch {
             CoroutineScope(Dispatchers.IO).async {

@@ -8,6 +8,7 @@ import android.util.Log
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import com.surveasy.surveasy.databinding.ActivityMyviewhistoryBinding
 import com.surveasy.surveasy.list.FinUserSurveyListViewModel
 import com.surveasy.surveasy.list.UserSurveyItem
@@ -34,6 +35,7 @@ class MyViewHistoryActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         binding = ActivityMyviewhistoryBinding.inflate(layoutInflater)
+
 
         setContentView(binding.root)
 
@@ -69,34 +71,32 @@ class MyViewHistoryActivity : AppCompatActivity() {
             binding.fragmentContainerView2.visibility = View.VISIBLE
         }
 
-        //viewModel 에 정산 여부에 따라 나눠서 저장
-        db.collection("panelData").document(Firebase.auth.currentUser!!.uid)
-            .collection("UserSurveyList").get()
-            .addOnSuccessListener { documents ->
-                for(document in documents){
-                    val item: UserSurveyItem = UserSurveyItem(
-                        Integer.parseInt(document["id"].toString()),
-                        Integer.parseInt(document["lastIDChecked"].toString()),
-                        document["title"] as String?,
-                        Integer.parseInt(document["panelReward"].toString()),
-                        document["responseDate"] as String?,
-                        document["isSent"] as Boolean,
-                        document["filePath"] as String?
-                    )
-
-                    if(document["isSent"] as Boolean){
-                        finList.add(item)
-                    }else{
-                        waitList.add(item)
-                    }
-                }
-                waitModel.waitSurvey.addAll(waitList)
-                finModel.finSurvey.addAll(finList)
-
-
-            }
-
-
+//        //viewModel 에 정산 여부에 따라 나눠서 저장
+//        db.collection("panelData").document(Firebase.auth.currentUser!!.uid)
+//            .collection("UserSurveyList").get()
+//            .addOnSuccessListener { documents ->
+//                for(document in documents){
+//                    val item: UserSurveyItem = UserSurveyItem(
+//                        Integer.parseInt(document["id"].toString()),
+//                        Integer.parseInt(document["lastIDChecked"].toString()),
+//                        document["title"] as String?,
+//                        Integer.parseInt(document["panelReward"].toString()),
+//                        document["responseDate"] as String?,
+//                        document["isSent"] as Boolean,
+//                        document["filePath"] as String?
+//                    )
+//
+//                    if(document["isSent"] as Boolean){
+//                        finList.add(item)
+//                    }else{
+//                        waitList.add(item)
+//                    }
+//                }
+//                waitModel.waitSurvey.addAll(waitList)
+//                finModel.finSurvey.addAll(finList)
+//
+//
+//            }
 
 
     }

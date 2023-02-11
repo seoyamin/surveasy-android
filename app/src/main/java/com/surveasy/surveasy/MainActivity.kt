@@ -152,10 +152,10 @@ class MainActivity : AppCompatActivity() {
             val currentYear = Calendar.getInstance().get(Calendar.YEAR)
             age = currentYear - birthYear + 1
             gender = userDB.userDao().getGender()
-            mainViewModel.fetchSurvey(20, "여")
-            mainViewModel.repositories6.observe(this@MainActivity){
-                Log.d(TAG, "onCreate: 66666${it.get(0)}")
-            }
+//            mainViewModel.fetchSurvey(20, "여")
+//            mainViewModel.repositories6.observe(this@MainActivity){
+//                Log.d(TAG, "onCreate: 66666${it.get(0)}")
+//            }
         }
 
         // Current User

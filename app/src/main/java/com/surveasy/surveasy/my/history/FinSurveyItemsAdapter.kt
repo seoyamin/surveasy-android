@@ -15,8 +15,9 @@ import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.surveasy.surveasy.R
 import com.surveasy.surveasy.list.UserSurveyItem
+import com.surveasy.surveasy.list.UserSurveyModel
 
-class FinSurveyItemsAdapter(val finList : ArrayList<UserSurveyItem>) : RecyclerView.Adapter<FinSurveyItemsAdapter.CustomViewHolder>() {
+class FinSurveyItemsAdapter(val finList : ArrayList<UserSurveyModel>) : RecyclerView.Adapter<FinSurveyItemsAdapter.CustomViewHolder>() {
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int

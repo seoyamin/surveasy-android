@@ -53,7 +53,6 @@ class MyViewHistoryWaitFragment : Fragment() {
 
 
         CoroutineScope(Dispatchers.Main).launch {
-            Log.d(TAG, "onCreateView: framgnet((((((((((")
             historyViewModel.fetchHistoryList(Firebase.auth.uid.toString())
             historyViewModel.repositories1.observe(viewLifecycleOwner){ data->
                 for (i in data){
@@ -74,7 +73,7 @@ class MyViewHistoryWaitFragment : Fragment() {
                 }
 
                 binding.historyWaitMoreBtn.setOnClickListener {
-                    if(cnt>=waitModel.waitSurvey.size-1){
+                    if(cnt>=data.size-1){
                         Toast.makeText(context,"불러올 수 있는 내역이 없습니다",Toast.LENGTH_SHORT).show()
                     }else{
                         cnt+=5

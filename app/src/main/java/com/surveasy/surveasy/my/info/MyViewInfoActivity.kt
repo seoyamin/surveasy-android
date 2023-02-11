@@ -7,33 +7,55 @@ import android.util.Log
 import android.widget.*
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import com.surveasy.surveasy.R
 import com.surveasy.surveasy.databinding.ActivityMyviewinfoBinding
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.surveasy.surveasy.MainRepository
+import com.surveasy.surveasy.MainViewModel
+import com.surveasy.surveasy.MainViewModelFactory
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MyViewInfoActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMyviewinfoBinding
     val db = Firebase.firestore
     val infoDataModel by viewModels<InfoDataViewModel>()
-
+    private lateinit var mainViewModel: MainViewModel
+    private lateinit var mainViewModelFactory : MainViewModelFactory
+    //info viewModel 만 공유하는 viewModel 을 만들면?
     var fragment : Int = 1
 
-    override fun onStart() {
-        super.onStart()
-
-        val infoData = intent.getParcelableExtra<InfoData>("info")!!
-        infoDataModel.infoData = infoData
-        //Log.d(TAG, "### infoActivity onStart ----- ${infoDataModel.infoData.EngSurvey}")
-
-    }
+//    override fun onStart() {
+//        super.onStart()
+//
+//        val infoData = intent.getParcelableExtra<InfoData>("info")!!
+//        infoDataModel.infoData = infoData
+//        //Log.d(TAG, "### infoActivity onStart ----- ${infoDataModel.infoData.EngSurvey}")
+//
+//    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         binding = ActivityMyviewinfoBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        mainViewModelFactory = MainViewModelFactory(MainRepository())
+        mainViewModel = ViewModelProvider(this, mainViewModelFactory)[MainViewModel::class.java]
+
+        CoroutineScope(Dispatchers.Main).launch {
+            mainViewModel.fetchCurrentUser(Firebase.auth.uid.toString())
+            mainViewModel.repositories1.observe(this@MyViewInfoActivity){
+                binding.MyViewInfoInfoItemName.text = it.name
+                binding.MyViewInfoInfoItemBirthDate.text = it.birthDate
+                binding.MyViewInfoInfoItemGender.text = it.gender
+                binding.MyViewInfoInfoItemEmail.text = it.email
+
+            }
+        }
 
         // ToolBar
         setSupportActionBar(binding.ToolbarMyViewInfo)
@@ -49,11 +71,11 @@ class MyViewInfoActivity : AppCompatActivity() {
         transaction.add(R.id.MyViewInfo_View, MyViewInfo1Fragment()).commit()
 
 
-        val infoData = intent.getParcelableExtra<InfoData>("info")!!
-        infoDataModel.infoData = infoData
-        //Log.d(TAG, "------------ ${infoDataModel.infoData.EngSurvey}")
-        setStaticInfo(infoDataModel.infoData)
-        //setVariableInfo(infoDataModel.infoData)
+//        val infoData = intent.getParcelableExtra<InfoData>("info")!!
+//        infoDataModel.infoData = infoData
+//        //Log.d(TAG, "------------ ${infoDataModel.infoData.EngSurvey}")
+//        setStaticInfo(infoDataModel.infoData)
+//        //setVariableInfo(infoDataModel.infoData)
 
 
         binding.MyViewInfoEditBtn.setOnClickListener{
@@ -68,7 +90,7 @@ class MyViewInfoActivity : AppCompatActivity() {
             }
             else if(fragment == 2) {
                 updateInfo()
-                fetchInfoData()
+                //fetchInfoData()
 
                 supportFragmentManager.beginTransaction()
                     .replace(R.id.MyViewInfo_View, MyViewInfo1Fragment()).commit()
@@ -112,20 +134,6 @@ class MyViewInfoActivity : AppCompatActivity() {
     }
 
 
-    private fun setStaticInfo(infoData: InfoData) {
-        val transaction = supportFragmentManager.beginTransaction()
-        transaction.add(R.id.MyViewInfo_View, MyViewInfo1Fragment()).commit()
-
-        val name = findViewById<TextView>(R.id.MyViewInfo_InfoItem_Name)
-        val birthDate = findViewById<TextView>(R.id.MyViewInfo_InfoItem_BirthDate)
-        val gender = findViewById<TextView>(R.id.MyViewInfo_InfoItem_Gender)
-        val email = findViewById<TextView>(R.id.MyViewInfo_InfoItem_Email)
-
-        name.text = infoData.name
-        birthDate.text = infoData.birthDate
-        gender.text = infoData.gender
-        email.text = infoData.email
-    }
 
     private fun setVariableInfo(infoData: InfoData) {
         val phoneNumber = findViewById<TextView>(R.id.MyViewInfo_InfoItem_PhoneNumber)

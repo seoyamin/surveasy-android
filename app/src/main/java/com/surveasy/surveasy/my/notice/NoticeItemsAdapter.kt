@@ -10,7 +10,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.surveasy.surveasy.R
 
-class NoticeItemsAdapter(val noticeList : ArrayList<NoticeItems>)
+class NoticeItemsAdapter(private val noticeList : ArrayList<NoticeModel>)
     : RecyclerView.Adapter<NoticeItemsAdapter.CustomViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int)
@@ -20,12 +20,12 @@ class NoticeItemsAdapter(val noticeList : ArrayList<NoticeItems>)
     }
 
     override fun onBindViewHolder(holder: CustomViewHolder, position: Int) {
-        val notice : NoticeItems = noticeList[position]
+        val notice = noticeList[position]
         holder.noticeItemTitle.text = notice.title
         holder.noticeItemDate.text = notice.date
         holder.noticeItemContent.text = notice.content
 
-        if(noticeList[position].isOpened == false) holder.noticeNew.visibility = View.VISIBLE
+        if(!noticeList[position].isOpened) holder.noticeNew.visibility = View.VISIBLE
         else holder.noticeNew.visibility = View.INVISIBLE
 
         holder.itemView.setOnClickListener {

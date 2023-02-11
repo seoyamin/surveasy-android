@@ -13,9 +13,10 @@ import com.surveasy.surveasy.R
 import com.surveasy.surveasy.list.NoticeToPanelDialogActivity
 import com.surveasy.surveasy.list.SurveyItems
 import com.surveasy.surveasy.list.SurveyListDetailActivity
+import com.surveasy.surveasy.model.SurveyModel
 
 
-class HomeListItemsAdapter(val homeList: ArrayList<SurveyItems>) : RecyclerView.Adapter<HomeListItemsAdapter.CustomViewHolder>() {
+class HomeListItemsAdapter(val homeList: ArrayList<SurveyModel>) : RecyclerView.Adapter<HomeListItemsAdapter.CustomViewHolder>() {
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int

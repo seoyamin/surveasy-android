@@ -24,9 +24,8 @@ class MyViewInfoActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMyviewinfoBinding
     val db = Firebase.firestore
     val infoDataModel by viewModels<InfoDataViewModel>()
-    private lateinit var mainViewModel: MainViewModel
-    private lateinit var mainViewModelFactory : MainViewModelFactory
-    //info viewModel 만 공유하는 viewModel 을 만들면?
+    private lateinit var infoViewModel: MyInfoViewModel
+    private lateinit var infoViewModelFactory : MyInfoViewModelFactory
     var fragment : Int = 1
 
 //    override fun onStart() {
@@ -43,12 +42,12 @@ class MyViewInfoActivity : AppCompatActivity() {
         binding = ActivityMyviewinfoBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        mainViewModelFactory = MainViewModelFactory(MainRepository())
-        mainViewModel = ViewModelProvider(this, mainViewModelFactory)[MainViewModel::class.java]
+        infoViewModelFactory = MyInfoViewModelFactory(MyInfoRepository())
+        infoViewModel = ViewModelProvider(this, infoViewModelFactory)[MyInfoViewModel::class.java]
 
         CoroutineScope(Dispatchers.Main).launch {
-            mainViewModel.fetchCurrentUser(Firebase.auth.uid.toString())
-            mainViewModel.repositories1.observe(this@MyViewInfoActivity){
+            infoViewModel.fetchUserInfo(Firebase.auth.uid.toString())
+            infoViewModel.repositories1.observe(this@MyViewInfoActivity){
                 binding.MyViewInfoInfoItemName.text = it.name
                 binding.MyViewInfoInfoItemBirthDate.text = it.birthDate
                 binding.MyViewInfoInfoItemGender.text = it.gender
@@ -71,13 +70,6 @@ class MyViewInfoActivity : AppCompatActivity() {
         transaction.add(R.id.MyViewInfo_View, MyViewInfo1Fragment()).commit()
 
 
-//        val infoData = intent.getParcelableExtra<InfoData>("info")!!
-//        infoDataModel.infoData = infoData
-//        //Log.d(TAG, "------------ ${infoDataModel.infoData.EngSurvey}")
-//        setStaticInfo(infoDataModel.infoData)
-//        //setVariableInfo(infoDataModel.infoData)
-
-
         binding.MyViewInfoEditBtn.setOnClickListener{
             if(fragment == 1) {
                 supportFragmentManager.beginTransaction()
@@ -89,8 +81,9 @@ class MyViewInfoActivity : AppCompatActivity() {
                 binding.MyViewInfoEditBtn.setTextColor(Color.parseColor("#FFFFFF"))
             }
             else if(fragment == 2) {
-                updateInfo()
+                //updateInfo()
                 //fetchInfoData()
+
 
                 supportFragmentManager.beginTransaction()
                     .replace(R.id.MyViewInfo_View, MyViewInfo1Fragment()).commit()
@@ -156,10 +149,11 @@ class MyViewInfoActivity : AppCompatActivity() {
 
 
     fun updateInfo() {
-        val docRef = db.collection("panelData").document(Firebase.auth.currentUser!!.uid)
+//        val docRef = db.collection("panelData").document(Firebase.auth.currentUser!!.uid)
 
         val phoneNumberEdit = findViewById<EditText>(R.id.MyViewInfo_InfoItem_PhoneNumberEdit)
         val accountNumberEdit = findViewById<EditText>(R.id.MyViewInfo_InfoItem_AccountNumberEdit)
+
 
         if(phoneNumberEdit.text.toString().trim().isNotEmpty()) {
             infoDataModel.infoData.phoneNumber = phoneNumberEdit.text.toString()
@@ -168,19 +162,24 @@ class MyViewInfoActivity : AppCompatActivity() {
             infoDataModel.infoData.accountNumber = accountNumberEdit.text.toString()
         }
 
-        docRef.update(
-            "phoneNumber", infoDataModel.infoData.phoneNumber,
-            "accountType", infoDataModel.infoData.accountType,
-            "accountNumber", infoDataModel.infoData.accountNumber)
-            .addOnSuccessListener {
-                Log.d(TAG, "##@@@###### info update1 SUCCESS")
-            }
+        //fetch 해서 저장하고 그 저장값 or 수정값의 플로우로 가야함.
+        CoroutineScope(Dispatchers.Main).launch {
+        }
 
-        docRef.collection("FirstSurvey").document(Firebase.auth.currentUser!!.uid)
-            .update("EngSurvey", infoDataModel.infoData.EngSurvey)
-            .addOnSuccessListener {
-                Log.d(TAG, "##@@@###### info update2 SUCCESS")
-            }
+
+//        docRef.update(
+//            "phoneNumber", infoDataModel.infoData.phoneNumber,
+//            "accountType", infoDataModel.infoData.accountType,
+//            "accountNumber", infoDataModel.infoData.accountNumber)
+//            .addOnSuccessListener {
+//                Log.d(TAG, "##@@@###### info update1 SUCCESS")
+//            }
+//
+//        docRef.collection("FirstSurvey").document(Firebase.auth.currentUser!!.uid)
+//            .update("EngSurvey", infoDataModel.infoData.EngSurvey)
+//            .addOnSuccessListener {
+//                Log.d(TAG, "##@@@###### info update2 SUCCESS")
+//            }
 
 
     }

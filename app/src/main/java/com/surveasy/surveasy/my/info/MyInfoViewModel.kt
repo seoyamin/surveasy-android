@@ -8,6 +8,9 @@ class MyInfoViewModel(private val repository: MyInfoRepository) : ViewModel() {
     private val _repositoriesFetchInfoData = MutableLiveData<MyInfoModel>()
     val repositories1 : MutableLiveData<MyInfoModel>
         get() = _repositoriesFetchInfoData
+    private val _repositoriesUpdateInfoData = MutableLiveData<MyInfoModel>()
+    val repositories2 : MutableLiveData<MyInfoModel>
+        get() = _repositoriesUpdateInfoData
 
 
     //acc viewModel
@@ -15,6 +18,10 @@ class MyInfoViewModel(private val repository: MyInfoRepository) : ViewModel() {
 
     suspend fun fetchUserInfo(uid : String){
         repository.fetchUserInfo(_repositoriesFetchInfoData, uid)
+    }
+
+    suspend fun updateUserInfo(uid: String, data : InfoEditModel){
+        repository.updateUserInfo(_repositoriesUpdateInfoData, uid, data)
     }
 
 }

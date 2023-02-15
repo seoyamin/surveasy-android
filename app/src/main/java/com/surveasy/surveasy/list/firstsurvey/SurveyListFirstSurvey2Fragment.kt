@@ -71,18 +71,6 @@ class SurveyListFirstSurvey2Fragment() : Fragment() {
             }
         }
 
-        // family
-//        val familyRadioGroup = view.findViewById<RadioGroup>(R.id.SurveyListFirstSurvey2_FamilyRadioGroup)
-//
-//        familyRadioGroup.setOnCheckedChangeListener { familyRadioGroup, checked ->
-//            when(checked) {
-//                R.id.SurveyListFirstSurvey2_Family1 -> family = "1인가구"
-//                R.id.SurveyListFirstSurvey2_Family2 -> family = "2인가구"
-//                R.id.SurveyListFirstSurvey2_Family3 -> family = "3인가구"
-//                R.id.SurveyListFirstSurvey2_Family4 -> family = "4인가구 이상"
-//            }
-//        }
-
         binding.SurveyListFirstSurvey2Btn.setOnClickListener{
             firstSurveyFin()
         }
@@ -258,20 +246,6 @@ class SurveyListFirstSurvey2Fragment() : Fragment() {
         }
     }
 
-
-//    private fun setPetSpinner(view: View) {
-//        val petList = resources.getStringArray(R.array.pet)
-//        val petAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, petList)
-//        val petSpinner = view.findViewById<Spinner>(R.id.SurveyListFirstSurvey2_PetSpinner)
-//        petSpinner.adapter = petAdapter
-//        petSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-//            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-//                pet = petList[position]
-//            }
-//            override fun onNothingSelected(p0: AdapterView<*>?) {
-//            }
-//        }
-//    }
 
     private fun setHousingTypeSpinner(view: View) {
         val housingTypeList = resources.getStringArray(R.array.housingType)

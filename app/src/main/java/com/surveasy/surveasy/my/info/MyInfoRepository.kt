@@ -1,6 +1,7 @@
 package com.surveasy.surveasy.my.info
 
 import android.content.ContentValues
+import android.content.ContentValues.TAG
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.google.firebase.firestore.ktx.firestore
@@ -41,4 +42,54 @@ class MyInfoRepository : MyInfoRepositoryInterface {
         }
 
     }
+
+    override suspend fun updateUserInfo(
+        mode: MutableLiveData<MyInfoModel>,
+        uid: String,
+        data: InfoEditModel
+    ) {
+        val docRef = db.collection("panelData").document(uid)
+
+        docRef.update(
+            "phoneNumber", data.phoneNumber.toString(),
+            "accountType", data.accountType.toString(),
+            "accountNumber", data.accountNumber.toString())
+            .addOnSuccessListener {
+                Log.d(TAG, "##@@@###### info update1 SUCCESS")
+            }
+
+        docRef.collection("FirstSurvey").document(uid)
+            .update("EngSurvey", data.EngSurvey as Boolean)
+            .addOnSuccessListener {
+                Log.d(TAG, "##@@@###### info update2 SUCCESS")
+            }
+    }
+
+    /*
+    val docRef = db.collection("panelData").document(Firebase.auth.currentUser!!.uid)
+
+        val phoneNumberEdit = findViewById<EditText>(R.id.MyViewInfo_InfoItem_PhoneNumberEdit)
+        val accountNumberEdit = findViewById<EditText>(R.id.MyViewInfo_InfoItem_AccountNumberEdit)
+
+        if(phoneNumberEdit.text.toString().trim().isNotEmpty()) {
+            infoDataModel.infoData.phoneNumber = phoneNumberEdit.text.toString()
+        }
+        if(accountNumberEdit.text.toString().trim().isNotEmpty()) {
+            infoDataModel.infoData.accountNumber = accountNumberEdit.text.toString()
+        }
+
+        docRef.update(
+            "phoneNumber", infoDataModel.infoData.phoneNumber,
+            "accountType", infoDataModel.infoData.accountType,
+            "accountNumber", infoDataModel.infoData.accountNumber)
+            .addOnSuccessListener {
+                Log.d(TAG, "##@@@###### info update1 SUCCESS")
+            }
+
+        docRef.collection("FirstSurvey").document(Firebase.auth.currentUser!!.uid)
+            .update("EngSurvey", infoDataModel.infoData.EngSurvey)
+            .addOnSuccessListener {
+                Log.d(TAG, "##@@@###### info update2 SUCCESS")
+            }
+     */
     }

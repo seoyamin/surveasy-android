@@ -26,16 +26,16 @@ class MyViewInfo1Fragment : Fragment() {
     val set: Boolean = false
     private var _binding : FragmentMyviewinfo1Binding? = null
     private val binding get() = _binding!!
-    private lateinit var mainViewModel: MainViewModel
-    private lateinit var mainViewModelFactory : MainViewModelFactory
+    private lateinit var infoViewModel: MyInfoViewModel
+    private lateinit var infoViewModelFactory : MyInfoViewModelFactory
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         _binding = FragmentMyviewinfo1Binding.inflate(layoutInflater)
         // (activity as MyViewInfoActivity).fetchInfoData()
-        mainViewModelFactory = MainViewModelFactory(MainRepository())
-        mainViewModel = ViewModelProvider(this, mainViewModelFactory)[MainViewModel::class.java]
+        infoViewModelFactory = MyInfoViewModelFactory(MyInfoRepository())
+        infoViewModel = ViewModelProvider(this, infoViewModelFactory)[MyInfoViewModel::class.java]
 
         val view = binding.root
         setVariableInfo()
@@ -53,13 +53,17 @@ class MyViewInfo1Fragment : Fragment() {
 
     private fun setVariableInfo() {
         CoroutineScope(Dispatchers.Main).launch {
-            mainViewModel.fetchCurrentUser(Firebase.auth.uid.toString())
-            mainViewModel.repositories1.observe(viewLifecycleOwner){
+            infoViewModel.fetchUserInfo(Firebase.auth.uid.toString())
+            infoViewModel.repositories1.observe(viewLifecycleOwner){
                 binding.MyViewInfoInfoItemPhoneNumber.text = it.phoneNumber
                 binding.MyViewInfoInfoItemAccountType.text = it.accountType
                 binding.MyViewInfoInfoItemAccountNumber.text = it.accountNumber
                 //eng survey 방법 찾기
-                binding.MyViewInfoInfoItemEngSurvey.text = "희망하지 않음"
+                if(it.EngSurvey==true){
+                    binding.MyViewInfoInfoItemEngSurvey.text = "희망함"
+                }else{
+                    binding.MyViewInfoInfoItemEngSurvey.text = "희망하지 않음"
+                }
 
             }
             }

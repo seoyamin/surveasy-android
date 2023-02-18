@@ -11,12 +11,20 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.ViewModelProvider
 import com.amplitude.api.Amplitude
+import com.google.firebase.auth.ktx.auth
 import com.surveasy.surveasy.R
 import com.surveasy.surveasy.login.CurrentUserViewModel
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.surveasy.surveasy.MainRepository
+import com.surveasy.surveasy.MainViewModel
+import com.surveasy.surveasy.MainViewModelFactory
 import com.surveasy.surveasy.databinding.FragmentSurveylistfirstsurvey2Binding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.*
 
 
@@ -25,6 +33,9 @@ class SurveyListFirstSurvey2Fragment() : Fragment() {
     val db = Firebase.firestore
     val userModel by activityViewModels<CurrentUserViewModel>()
     val firstSurveyModel by activityViewModels<FirstSurveyViewModel>()
+    
+    private lateinit var fsViewModel : FSViewModel
+    private lateinit var fsViewModelFactory: FSViewModelFactory
 
     private var _binding : FragmentSurveylistfirstsurvey2Binding? = null
     private val binding get() = _binding!!
@@ -35,6 +46,7 @@ class SurveyListFirstSurvey2Fragment() : Fragment() {
     private var pet : String? = null
     private var family : String? = null
     private var housingType: String? = null
+    private lateinit var uid : String
 
 
     override fun onCreateView(
@@ -44,8 +56,13 @@ class SurveyListFirstSurvey2Fragment() : Fragment() {
     ): View? {
         _binding = FragmentSurveylistfirstsurvey2Binding.inflate(layoutInflater)
         val view = binding.root
+        
+        uid = Firebase.auth.uid.toString()
         districtSpinner = view.findViewById(R.id.SurveyListFirstSurvey2_DistrictSpinner)
-
+        
+        fsViewModelFactory = FSViewModelFactory(FirstSurveyRepository())
+        fsViewModel = ViewModelProvider(this, fsViewModelFactory)[FSViewModel::class.java]
+        
         setCitySpinner(view)
         setDistrictSpinner(districtSpinner, 0)
         //setPetSpinner(view)
@@ -110,7 +127,7 @@ class SurveyListFirstSurvey2Fragment() : Fragment() {
             firstSurveyModel.firstSurvey.family = family
             firstSurveyModel.firstSurvey.housingType = housingType
 
-            firestore()
+            uploadFB()
 
             // [Amplitude] First Survey Fin
             val client = Amplitude.getInstance()
@@ -123,69 +140,27 @@ class SurveyListFirstSurvey2Fragment() : Fragment() {
 
     }
 
-    private fun firestore() {
-
-        // update Firestore 'didFirstSurvey (false -> true)"
-        db.collection("panelData").document(userModel.currentUser.uid!!)
-            .update("didFirstSurvey", true)
-            .addOnSuccessListener { Log.d(TAG, "@@@@@ 1. didFirstSurvey field updated!") }
-            Log.d(TAG, "*****")
-
-
-        // set Firestore 'userSurveyList"
-        val c = Calendar.getInstance()
-
-        val year = c.get(Calendar.YEAR).toString()
-        var month = (c.get(Calendar.MONTH) + 1).toString()
-        var day = c.get(Calendar.DAY_OF_MONTH).toString()
-        if(month.toInt() < 10) month = "0$month"
-        if(day.toInt() < 10) day = "0$day"
-
-        val date = year + "-" + month + "-" + day
-        val firstSurvey = hashMapOf(
-            "id" to "0",
-            "lastIDChecked" to "0",
-            "isSent" to false,
-            "responseDate" to date,
-            "panelReward" to 200,
-            "title" to "패널 기본 정보 조사"
-        )
-
-        db.collection("panelData").document(userModel.currentUser.uid!!)
-            .collection("UserSurveyList").document("0")
-            .set(firstSurvey)
-            .addOnSuccessListener { Log.d(TAG, "@@@@@ 2. UserSurveyLIst updated!") }
-
-
-
-        // update Firestore reward
-        db.collection("panelData").document(userModel.currentUser.uid!!)
-            .update(
-                "reward_current", userModel.currentUser.rewardCurrent!! + 200,
-                "reward_total", userModel.currentUser.rewardTotal!! + 200
+    private fun uploadFB() {
+        CoroutineScope(Dispatchers.Main).launch {
+            fsViewModel.updateDidFS(uid)
+            fsViewModel.updateReward(uid)
+            fsViewModel.setUserSurveyList(uid)
+            val firstSurvey = FSCollectionModel(
+                firstSurveyModel.firstSurvey.job,
+                firstSurveyModel.firstSurvey.major,
+                firstSurveyModel.firstSurvey.university,
+                firstSurveyModel.firstSurvey.EngSurvey,
+                firstSurveyModel.firstSurvey.military,
+                firstSurveyModel.firstSurvey.city,
+                firstSurveyModel.firstSurvey.district,
+                firstSurveyModel.firstSurvey.married,
+                firstSurveyModel.firstSurvey.pet,
+                firstSurveyModel.firstSurvey.family,
+                firstSurveyModel.firstSurvey.housingType
             )
-            .addOnSuccessListener { Log.d(TAG, "@@@@@ 3. First Survey Reward updated!") }
-        Log.d(TAG, "*****")
-
-
-
-        // add "FirstSurvey" collection to panelData
-        val FirstSurvey = hashMapOf(
-            "job" to firstSurveyModel.firstSurvey.job,
-            "major" to firstSurveyModel.firstSurvey.major,
-            "university" to firstSurveyModel.firstSurvey.university,
-            "EngSurvey" to firstSurveyModel.firstSurvey.EngSurvey,
-            "military" to firstSurveyModel.firstSurvey.military,
-            "city" to firstSurveyModel.firstSurvey.city,
-            "district" to firstSurveyModel.firstSurvey.district,
-            "married" to firstSurveyModel.firstSurvey.married,
-            "pet" to firstSurveyModel.firstSurvey.pet,
-            "family" to firstSurveyModel.firstSurvey.family,
-            "housingType" to firstSurveyModel.firstSurvey.housingType
-        )
-        db.collection("panelData").document(userModel.currentUser.uid!!)
-            .collection("FirstSurvey").document(userModel.currentUser.uid!!)
-            .set(FirstSurvey).addOnSuccessListener { Log.d(TAG, "FFFFFFFFFFFFFF First Survey uploaded!") }
+            fsViewModel.addFSCollection(uid, firstSurvey)
+            Log.d(TAG, "uploadFB: done, ${firstSurveyModel.firstSurvey}")
+        }
     }
 
 

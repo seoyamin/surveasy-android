@@ -147,4 +147,3 @@ class FirstSurveyRepository : FirstSurveyRepositoryInterface {
             .set(FirstSurvey).addOnSuccessListener { Log.d(TAG, "FFFFFFFFFFFFFF First Survey uploaded!") }
     }
      */
-}

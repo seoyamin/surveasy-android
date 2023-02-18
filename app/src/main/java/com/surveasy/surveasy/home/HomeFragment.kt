@@ -105,6 +105,7 @@ class HomeFragment : Fragment() {
             mainViewModel.fetchCurrentUser(Firebase.auth.currentUser!!.uid)
             mainViewModel.repositories1.observe(viewLifecycleOwner){
                 Log.d(TAG, "onCreate: fragment###${it.name}")
+                Log.d(TAG, "onCreateView: @@@@@@@@@${Firebase.auth.uid} **** ${it.name}")
                 binding.HomeGreetingText.text = "안녕하세요, ${it.name}님!"
                 if(it.UserSurveyList == null){
                     binding.HomeSurveyNum.text = "0개"
@@ -274,11 +275,11 @@ class HomeFragment : Fragment() {
             //Log.d(TAG, "onCreateView: 시작 전")
             //val model by activityViewModels<SurveyInfoViewModel>()
             //getHomeList(model)
-            mainViewModel.fetchSurvey(20, "여")
-            mainViewModel.repositories6.observe(viewLifecycleOwner){
-                Log.d(TAG, "onCreate: 66666${it.get(0)}")
-
-            }
+//            mainViewModel.fetchSurvey(20, "여")
+//            mainViewModel.repositories6.observe(viewLifecycleOwner){
+//                Log.d(TAG, "onCreate: 66666${it.get(0)}")
+//
+//            }
             //Log.d(TAG, "onCreateView: 끝")
 
 
@@ -392,6 +393,7 @@ class HomeFragment : Fragment() {
         CoroutineScope(Dispatchers.Main).launch {
             mainViewModel.fetchSurvey(20, "여")
             mainViewModel.repositories6.observe(viewLifecycleOwner){
+                Log.d(TAG, "chooseHomeList: &&&&&$it")
                 boolList = ArrayList(sortSurvey(it).size)
                 var num: Int = 0
                 //survey list item 크기와 같은 boolean type list 만들기. 모두 false 로
@@ -450,12 +452,13 @@ class HomeFragment : Fragment() {
             mainViewModel.fetchSurvey(20, "여")
             mainViewModel.repositories6.observe(viewLifecycleOwner){
                 var index = 0
-                while(index < it.size){
-                    index += if(!boolList[index]){
+                // 설문 하나 추가됐을 때 확인해보기
+                while(index < it.size && it.size==0){
+                    if(!boolList[index]){
                         finList.add(sortSurvey(it).get(index))
-                        1
+                        index+=1
                     }else{
-                        1
+                        index+=1
                     }
 
                 }
@@ -464,7 +467,7 @@ class HomeFragment : Fragment() {
 
         return finList
     }
-    fun sortSurvey(surveyList : kotlin.collections.ArrayList<SurveyModel>) : ArrayList<SurveyModel>{
+    private fun sortSurvey(surveyList : kotlin.collections.ArrayList<SurveyModel>) : ArrayList<SurveyModel>{
         val sortList = arrayListOf<SurveyModel>()
         surveyList.sortWith(compareBy<SurveyModel> { it.dueDate }.thenBy { it.dueTimeTime })
         sortList.addAll(surveyList)

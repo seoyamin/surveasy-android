@@ -10,7 +10,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.Fragment
-import com.surveasy.surveasy.R
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
@@ -25,9 +24,7 @@ import com.surveasy.surveasy.my.info.MyViewInfoActivity
 import com.surveasy.surveasy.my.setting.MyViewSettingActivity
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.surveasy.surveasy.MainRepository
-import com.surveasy.surveasy.MainViewModel
-import com.surveasy.surveasy.MainViewModelFactory
+import com.surveasy.surveasy.*
 import com.surveasy.surveasy.databinding.FragmentMyviewBinding
 import com.surveasy.surveasy.my.notice.*
 import com.surveasy.surveasy.my.notice.noticeRoom.NoticeDatabase
@@ -41,6 +38,7 @@ class MyViewFragment : Fragment() {
     var noticeNum_fb = 0
     var noticeNum_room = 0
     val userModel by activityViewModels<CurrentUserViewModel>()
+    private val mainDataViewModel by activityViewModels<MainDataViewModel>()
     private lateinit var noticeDB : NoticeDatabase
 
     private var _binding : FragmentMyviewBinding? = null
@@ -64,24 +62,21 @@ class MyViewFragment : Fragment() {
         mainViewModelFactory = MainViewModelFactory(MainRepository())
         mainViewModel = ViewModelProvider(this, mainViewModelFactory)[MainViewModel::class.java]
         CoroutineScope(Dispatchers.Main).launch {
-            mainViewModel.fetchCurrentUser(Firebase.auth.currentUser!!.uid)
-            mainViewModel.repositories1.observe(viewLifecycleOwner){
-                userName.text = it.name
-                val rewardFin = (it.rewardTotal!!.toInt()) - (it.rewardCurrent!!.toInt())
-                userRewardFinAmount.text = rewardFin.toString()
-                userRewardYetAmount.text = it.rewardCurrent.toString()
-                userSurveyCountAmount.text = it.UserSurveyList!!.size.toString()
-                //eng fetch
-                info = InfoData(it.name, it.birthDate, it.gender, it.email, it.phoneNumber, it.accountType, it.accountNumber, false)
-                infoIcon.setOnClickListener {
-                    val intent = Intent(context, MyViewInfoActivity::class.java)
-                    intent.putExtra("info", info)
-                    startActivity(intent)
-                }
-
+            fetchUserData()
+            val userData = mainDataViewModel.currentUserModel[0]
+            userName.text = userData.name
+            val rewardFin = (userData.rewardTotal!!.toInt()) - (userData.rewardCurrent!!.toInt())
+            userRewardFinAmount.text = rewardFin.toString()
+            userRewardYetAmount.text = userData.rewardCurrent.toString()
+            userSurveyCountAmount.text = userData.UserSurveyList!!.size.toString()
+            //eng fetch
+            info = InfoData(userData.name, userData.birthDate, userData.gender, userData.email,
+                userData.phoneNumber, userData.accountType, userData.accountNumber, false)
+            infoIcon.setOnClickListener {
+                val intent = Intent(context, MyViewInfoActivity::class.java)
+                intent.putExtra("info", info)
+                startActivity(intent)
             }
-
-
         }
 
 
@@ -201,6 +196,15 @@ class MyViewFragment : Fragment() {
 
                 }
             }
+    }
+
+    private suspend fun fetchUserData(){
+        CoroutineScope(Dispatchers.Main).async {
+            val t = withContext(Dispatchers.IO){
+                while(mainDataViewModel.currentUserModel.size==0){}
+                1
+            }
+        }.await()
     }
 
 

@@ -41,7 +41,6 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
     private val db = Firebase.firestore
 
     //mainActivity fetch currentUser
-    var currentUserModel = CurrentUser()
 
     init {
         Log.d(TAG, ": MainViewMode init")

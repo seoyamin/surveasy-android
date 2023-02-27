@@ -10,15 +10,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
-import com.amplitude.api.Amplitude
 
 import com.surveasy.surveasy.list.*
 import com.surveasy.surveasy.login.*
@@ -28,9 +25,7 @@ import com.surveasy.surveasy.home.banner.BannerViewModel
 import com.surveasy.surveasy.home.banner.BannerViewPagerAdapter
 import com.surveasy.surveasy.home.contribution.ContributionItemsAdapter
 import com.surveasy.surveasy.home.contribution.HomeContributionViewModel
-import com.bumptech.glide.Glide
 import com.google.android.gms.tasks.Task
-import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -45,8 +40,6 @@ import com.surveasy.surveasy.home.Opinion.HomeOpinionAnswerViewModel
 import com.surveasy.surveasy.model.SurveyModel
 import com.surveasy.surveasy.my.history.MyViewHistoryActivity
 import kotlinx.coroutines.*
-import org.json.JSONException
-import org.json.JSONObject
 import java.lang.Runnable
 import java.text.SimpleDateFormat
 import java.util.*
@@ -55,7 +48,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 
 
 class HomeFragment : Fragment() {
@@ -73,6 +65,8 @@ class HomeFragment : Fragment() {
     private val opinionModel by activityViewModels<HomeOpinionViewModel>()
     private val answerModel by activityViewModels<HomeOpinionAnswerViewModel>()
     private val model by activityViewModels<SurveyInfoViewModel>()
+    private val mainDataViewModel by activityViewModels<MainDataViewModel>()
+
 
     private lateinit var mainViewModel: MainViewModel
     private lateinit var mainViewModelFactory : MainViewModelFactory
@@ -102,61 +96,46 @@ class HomeFragment : Fragment() {
         CoroutineScope(Dispatchers.Main).launch {
 
             //user info fetch
-            mainViewModel.fetchCurrentUser(Firebase.auth.currentUser!!.uid)
-            mainViewModel.repositories1.observe(viewLifecycleOwner){
-                Log.d(TAG, "onCreate: fragment###${it.name}")
-                Log.d(TAG, "onCreateView: @@@@@@@@@${Firebase.auth.uid} **** ${it.name}")
-                binding.HomeGreetingText.text = "안녕하세요, ${it.name}님!"
-                if(it.UserSurveyList == null){
-                    binding.HomeSurveyNum.text = "0개"
-                }else{
-                    binding.HomeSurveyNum.text = "${it.UserSurveyList!!.size}개"
-                }
-                binding.HomeRewardAmount.text = "${it.rewardTotal}원"
+            fetchUserData()
+            val currentUser = mainDataViewModel.currentUserModel[0]
+            binding.HomeGreetingText.text = "안녕하세요, ${currentUser.name}님!"
+            if(currentUser.UserSurveyList == null){
+                binding.HomeSurveyNum.text = "0개"
+            }else{
+                binding.HomeSurveyNum.text = "${currentUser.UserSurveyList!!.size}개"
+            }
+            binding.HomeRewardAmount.text = "${currentUser.rewardTotal}원"
 
-                //home list
-                if (it.didFirstSurvey == false) {
-                    binding.HomeListItemContainerFirst.visibility= View.VISIBLE
-                    binding.homeListText.visibility = View.GONE
+            //home list
+            if (currentUser.didFirstSurvey == false) {
+                binding.HomeListItemContainerFirst.visibility= View.VISIBLE
+                binding.homeListText.visibility = View.GONE
+                binding.homeListRecyclerView.visibility = View.GONE
+                binding.HomeListItemTitleFirst.text = "${currentUser.name}님에 대해 알려주세요!"
+
+            }
+
+            else if(currentUser.didFirstSurvey == true) {
+                if (setHomeList(chooseHomeList(currentUser)).size == 0) {
+                    binding.HomeListItemContainerFirst.visibility= View.GONE
                     binding.homeListRecyclerView.visibility = View.GONE
-                    binding.HomeListItemTitleFirst.text = "${it.name}님에 대해 알려주세요!"
 
-//                    if (it.uid != null) {
-//                    }
-//                    else {
-//                        if (Firebase.auth.currentUser?.uid != null) {
-//                            db.collection("panelData")
-//                                .document(Firebase.auth.currentUser!!.uid)
-//                                .get().addOnSuccessListener { document ->
-//                                    binding.HomeListItemTitleFirst.text = "${document["name"].toString()}님에 대해 알려주세요!"
-//                                }
-//                        }
-//                    }
-
+                    binding.homeListText.text = "현재 참여가능한 설문이 없습니다"
+                    binding.homeListText.visibility = View.VISIBLE
                 }
 
-                else if(it.didFirstSurvey == true) {
-                    if (setHomeList(chooseHomeList(it)).size == 0) {
-                        binding.HomeListItemContainerFirst.visibility= View.GONE
-                        binding.homeListRecyclerView.visibility = View.GONE
-
-                        binding.homeListText.text = "현재 참여가능한 설문이 없습니다"
-                        binding.homeListText.visibility = View.VISIBLE
-                    }
-
-                    else {
-                        binding.HomeListItemContainerFirst.visibility= View.GONE
-                        binding.homeListText.visibility = View.GONE
-                        binding.homeListRecyclerView.visibility = View.VISIBLE
-                        val adapter = HomeListItemsAdapter(setHomeList(chooseHomeList(it)))
-                        container?.layoutManager = LinearLayoutManager(
-                            context,
-                            LinearLayoutManager.VERTICAL, false
-                        )
-                        container?.adapter = HomeListItemsAdapter(setHomeList(chooseHomeList(it)))
-                    }
-
+                else {
+                    binding.HomeListItemContainerFirst.visibility= View.GONE
+                    binding.homeListText.visibility = View.GONE
+                    binding.homeListRecyclerView.visibility = View.VISIBLE
+                    val adapter = HomeListItemsAdapter(setHomeList(chooseHomeList(currentUser)))
+                    container?.layoutManager = LinearLayoutManager(
+                        context,
+                        LinearLayoutManager.VERTICAL, false
+                    )
+                    container?.adapter = HomeListItemsAdapter(setHomeList(chooseHomeList(currentUser)))
                 }
+
             }
 
             //banner fetch
@@ -380,6 +359,15 @@ class HomeFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private suspend fun fetchUserData(){
+        CoroutineScope(Dispatchers.Main).async {
+            val t = withContext(Dispatchers.IO){
+                while(mainDataViewModel.currentUserModel.size==0){}
+                1
+            }
+        }.await()
     }
 
 

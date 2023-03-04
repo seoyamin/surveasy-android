@@ -379,83 +379,83 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    fun fetchSurvey() {
-
-        // [Targeting] Room DB에서 User info 가져오기
-        val birthYear = userDB.userDao().getBirth()
-            val currentYear = Calendar.getInstance().get(Calendar.YEAR)
-            age = currentYear - birthYear + 1
-        gender = userDB.userDao().getGender()
-
-
-        // Fetch from FB
-        db.collection("surveyData")
-            .orderBy("lastIDChecked", Query.Direction.DESCENDING)
-            .limit(18).get()
-            .addOnSuccessListener { result ->
-                for (document in result) {
-
-                    // [case 1] 타겟팅 추가 이후 설문
-                    if(document["targetingAge"] != null && document["targetingGender"] != null) {
-                        val targetingAge = Integer.parseInt(document["targetingAge"].toString()) as Int
-                        val targetingGender = Integer.parseInt(document["targetingGender"].toString()) as Int
-
-                        if(checkTargeting(targetingAge, targetingGender)) {
-                            if(document["panelReward"] != null) {
-                                val item: SurveyItems = SurveyItems(
-                                    Integer.parseInt(document["id"].toString()) as Int,
-                                    Integer.parseInt(document["lastIDChecked"].toString()) as Int,
-                                    document["title"] as String,
-                                    document["target"] as String,
-                                    document["uploadDate"] as String?,
-                                    document["link"] as String?,
-                                    document["spendTime"] as String?,
-                                    document["dueDate"] as String?,
-                                    document["dueTimeTime"] as String?,
-                                    Integer.parseInt(document["panelReward"].toString()),
-                                    document["noticeToPanel"] as String?,
-                                    Integer.parseInt(document["progress"].toString()),
-                                    Integer.parseInt(document["targetingAge"].toString()) as Int,
-                                    Integer.parseInt(document["targetingGender"].toString()) as Int,
-                                )
-                                surveyList.add(item)
-                            }
-                        }
-
-
-                    }
-
-                    // [case 2] 타겟팅 추가 이전 설문
-                    else {
-                        if(document["panelReward"] != null) {
-                            val item: SurveyItems = SurveyItems(
-                                Integer.parseInt(document["id"].toString()) as Int,
-                                Integer.parseInt(document["lastIDChecked"].toString()) as Int,
-                                document["title"] as String,
-                                document["target"] as String,
-                                document["uploadDate"] as String?,
-                                document["link"] as String?,
-                                document["spendTime"] as String?,
-                                document["dueDate"] as String?,
-                                document["dueTimeTime"] as String?,
-                                Integer.parseInt(document["panelReward"].toString()),
-                                document["noticeToPanel"] as String?,
-                                Integer.parseInt(document["progress"].toString()),
-                                1,
-                                1
-                            )
-                            surveyList.add(item)
-                        }
-                    }
-
-                }
-
-                model.surveyInfo.addAll(surveyList)
-            }
-            .addOnFailureListener { exception ->
-                Log.d(TAG, "fail $exception")
-            }
-    }
+//    fun fetchSurvey() {
+//
+//        // [Targeting] Room DB에서 User info 가져오기
+//        val birthYear = userDB.userDao().getBirth()
+//            val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+//            age = currentYear - birthYear + 1
+//        gender = userDB.userDao().getGender()
+//
+//
+//        // Fetch from FB
+//        db.collection("surveyData")
+//            .orderBy("lastIDChecked", Query.Direction.DESCENDING)
+//            .limit(18).get()
+//            .addOnSuccessListener { result ->
+//                for (document in result) {
+//
+//                    // [case 1] 타겟팅 추가 이후 설문
+//                    if(document["targetingAge"] != null && document["targetingGender"] != null) {
+//                        val targetingAge = Integer.parseInt(document["targetingAge"].toString()) as Int
+//                        val targetingGender = Integer.parseInt(document["targetingGender"].toString()) as Int
+//
+//                        if(checkTargeting(targetingAge, targetingGender)) {
+//                            if(document["panelReward"] != null) {
+//                                val item: SurveyItems = SurveyItems(
+//                                    Integer.parseInt(document["id"].toString()) as Int,
+//                                    Integer.parseInt(document["lastIDChecked"].toString()) as Int,
+//                                    document["title"] as String,
+//                                    document["target"] as String,
+//                                    document["uploadDate"] as String?,
+//                                    document["link"] as String?,
+//                                    document["spendTime"] as String?,
+//                                    document["dueDate"] as String?,
+//                                    document["dueTimeTime"] as String?,
+//                                    Integer.parseInt(document["panelReward"].toString()),
+//                                    document["noticeToPanel"] as String?,
+//                                    Integer.parseInt(document["progress"].toString()),
+//                                    Integer.parseInt(document["targetingAge"].toString()) as Int,
+//                                    Integer.parseInt(document["targetingGender"].toString()) as Int,
+//                                )
+//                                surveyList.add(item)
+//                            }
+//                        }
+//
+//
+//                    }
+//
+//                    // [case 2] 타겟팅 추가 이전 설문
+//                    else {
+//                        if(document["panelReward"] != null) {
+//                            val item: SurveyItems = SurveyItems(
+//                                Integer.parseInt(document["id"].toString()) as Int,
+//                                Integer.parseInt(document["lastIDChecked"].toString()) as Int,
+//                                document["title"] as String,
+//                                document["target"] as String,
+//                                document["uploadDate"] as String?,
+//                                document["link"] as String?,
+//                                document["spendTime"] as String?,
+//                                document["dueDate"] as String?,
+//                                document["dueTimeTime"] as String?,
+//                                Integer.parseInt(document["panelReward"].toString()),
+//                                document["noticeToPanel"] as String?,
+//                                Integer.parseInt(document["progress"].toString()),
+//                                1,
+//                                1
+//                            )
+//                            surveyList.add(item)
+//                        }
+//                    }
+//
+//                }
+//
+//                model.surveyInfo.addAll(surveyList)
+//            }
+//            .addOnFailureListener { exception ->
+//                Log.d(TAG, "fail $exception")
+//            }
+//    }
 
 
 

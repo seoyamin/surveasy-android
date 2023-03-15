@@ -5,8 +5,8 @@ import com.surveasy.surveasy.list.UserSurveyModel
 
 interface MyHistoryRepositoryInterface {
     suspend fun fetchHistoryList(
-        finModel : MutableLiveData<ArrayList<UserSurveyModel>>,
         waitModel : MutableLiveData<ArrayList<UserSurveyModel>>,
+        finModel : MutableLiveData<ArrayList<UserSurveyModel>>,
         uid : String
     )
 }

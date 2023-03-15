@@ -15,8 +15,8 @@ class MyHistoryRepository : MyHistoryRepositoryInterface {
 
     //viewModel 에 정산 여부에 따라 나눠서 저장
     override suspend fun fetchHistoryList(
-        finModel: MutableLiveData<ArrayList<UserSurveyModel>>,
         waitModel: MutableLiveData<ArrayList<UserSurveyModel>>,
+        finModel: MutableLiveData<ArrayList<UserSurveyModel>>,
         uid: String
     ) {
         var finList = ArrayList<UserSurveyModel>()

@@ -95,7 +95,7 @@ class SurveyItemsAdapter(val surveyList: ArrayList<SurveyModel>, val boolList: A
 
         if(!showCanParticipateList.contains(true)){
             if(boolList[position]){
-                holder.itemContainer.setBackgroundResource(R.drawable.custom_donbox)
+                holder.itemContainer.setBackgroundResource(R.drawable.custom_box_done)
 
             }
         }else{

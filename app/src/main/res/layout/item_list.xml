@@ -10,7 +10,7 @@
     <LinearLayout
         android:id="@+id/SurveyList_ItemContainer"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="100dp"
         android:layout_margin="8dp"
         android:background="@drawable/custom_box"
         app:layout_constraintStart_toStartOf="parent"

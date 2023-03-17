@@ -50,46 +50,9 @@ class SurveyListFragment() : Fragment() {
         val view = binding.root
 
         var showCanParticipateList = arrayListOf<Boolean>()
-        val filterList = listOf("최신순","마감순")
-        val filterAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, filterList)
         var n : Int = 0
 
-        while (n < model.surveyInfo.size) {
-            showCanParticipateList.add(false)
-            n++
-        }
 
-//        binding.SurveylistFilterSpinner.adapter = filterAdapter
-//        binding.SurveylistFilterSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-//            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-//                listFilter = filterList[position]
-//                if(listFilter.equals("최신순")){
-//                    if(binding.SurveylistFilterParticipate.isChecked){
-//                        val adapter = SurveyItemsAdapter(model.sortSurveyRecent(), changeDoneSurvey(),changeDoneSurvey())
-//                        binding.recyclerContainer.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
-//                        binding.recyclerContainer.adapter = SurveyItemsAdapter(model.sortSurveyRecent(),changeDoneSurvey(),changeDoneSurvey())
-//                    }else{
-//                        val adapter = SurveyItemsAdapter(model.sortSurveyRecent(), changeDoneSurvey(),showCanParticipateList)
-//                        binding.recyclerContainer.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
-//                        binding.recyclerContainer.adapter = SurveyItemsAdapter(model.sortSurveyRecent(),changeDoneSurvey(),showCanParticipateList)
-//                    }
-//
-//                }else{
-//                    if(binding.SurveylistFilterParticipate.isChecked){
-//                        val adapter = SurveyItemsAdapter(model.sortSurvey(), changeDoneSurvey(),changeDoneSurvey())
-//                        binding.recyclerContainer.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
-//                        binding.recyclerContainer.adapter = SurveyItemsAdapter(model.sortSurvey(),changeDoneSurvey(),changeDoneSurvey())
-//                    }else{
-//                        val adapter = SurveyItemsAdapter(model.sortSurvey(), changeDoneSurvey(),showCanParticipateList)
-//                        binding.recyclerContainer.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
-//                        binding.recyclerContainer.adapter = SurveyItemsAdapter(model.sortSurvey(),changeDoneSurvey(),showCanParticipateList)
-//                    }
-//                }
-//
-//            }
-//            override fun onNothingSelected(p0: AdapterView<*>?) {
-//            }
-//        }
 
         mainViewModelFactory = MainViewModelFactory(MainRepository())
         mainViewModel = ViewModelProvider(this, mainViewModelFactory)[MainViewModel::class.java]
@@ -99,43 +62,36 @@ class SurveyListFragment() : Fragment() {
             mainViewModel.fetchSurvey(20, "여")
             mainViewModel.repositories6.observe(viewLifecycleOwner){
                 Log.d(TAG, "onCreate: 000000${it.get(0)}")
-                val adapter = SurveyItemsAdapter(sortSurveyRecent(it), changeDoneSurvey(it),showCanParticipateList)
+                SurveyItemsAdapter(sortSurveyRecent(it), changeDoneSurvey(it),showCanParticipateList)
                 binding.recyclerContainer.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
                 binding.recyclerContainer.adapter = SurveyItemsAdapter(sortSurveyRecent(it),changeDoneSurvey(it),showCanParticipateList)
 
+                while (n < it.size) {
+                    showCanParticipateList.add(false)
+                    n++
+                }
+
+                //참여가능 설문 보기
+                binding.SurveylistFilterParticipate.setOnCheckedChangeListener{ button, ischecked ->
+                    if(ischecked){
+                        SurveyItemsAdapter(sortSurveyRecent(it), changeDoneSurvey(it),changeDoneSurvey(it))
+                        binding.recyclerContainer.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
+                        binding.recyclerContainer.adapter = SurveyItemsAdapter(sortSurveyRecent(it), changeDoneSurvey(it),changeDoneSurvey(it))
+
+                    }else{
+                        SurveyItemsAdapter(sortSurveyRecent(it), changeDoneSurvey(it),showCanParticipateList)
+                        binding.recyclerContainer.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
+                        binding.recyclerContainer.adapter = SurveyItemsAdapter(sortSurveyRecent(it),changeDoneSurvey(it),showCanParticipateList)
+                    }
+                }
             }
+
+
 
         }
         //Toast.makeText(context,"Loading",Toast.LENGTH_LONG).show()
 
         binding.recyclerContainer.setItemViewCacheSize(20)
-
-//        binding.SurveylistFilterParticipate.setOnCheckedChangeListener{ button, ischecked ->
-//            if(ischecked){
-//                if(listFilter.equals("최신순")){
-//                    val adapter = SurveyItemsAdapter(model.sortSurveyRecent(), changeDoneSurvey(),changeDoneSurvey())
-//                    binding.recyclerContainer.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
-//                    binding.recyclerContainer.adapter = SurveyItemsAdapter(model.sortSurveyRecent(),changeDoneSurvey(),changeDoneSurvey())
-//                }
-//                else{
-//                    val adapter = SurveyItemsAdapter(model.sortSurvey(), changeDoneSurvey(),changeDoneSurvey())
-//                    binding.recyclerContainer.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
-//                    binding.recyclerContainer.adapter = SurveyItemsAdapter(model.sortSurvey(),changeDoneSurvey(),changeDoneSurvey())
-//                }
-//
-//            }else{
-//                if(listFilter.equals("최신순")){
-//                    val adapter = SurveyItemsAdapter(model.sortSurveyRecent(), changeDoneSurvey(),showCanParticipateList)
-//                    binding.recyclerContainer.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
-//                    binding.recyclerContainer.adapter = SurveyItemsAdapter(model.sortSurveyRecent(),changeDoneSurvey(),showCanParticipateList)
-//                }else{
-//                    val adapter = SurveyItemsAdapter(model.sortSurvey(), changeDoneSurvey(),showCanParticipateList)
-//                    binding.recyclerContainer.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
-//                    binding.recyclerContainer.adapter = SurveyItemsAdapter(model.sortSurvey(),changeDoneSurvey(),showCanParticipateList)
-//                }
-//
-//            }
-//        }
 
         return view
     }
@@ -217,43 +173,6 @@ class SurveyListFragment() : Fragment() {
 
 
     }
-
-
-
-
-
-
-
-// firebase에서 가져와서 비교 (속도 문제)
-//    private fun changeFbDone(surveyList : ArrayList<SurveyItems>) : ArrayList<Boolean>{
-//        val userModel by activityViewModels<CurrentUserViewModel>()
-//
-//        val doneSurvey = userModel.currentUser.UserSurveyList
-//        var boolList = ArrayList<Boolean>(surveyList.size)
-//        var num: Int = 0
-//
-//        //survey list item 크기와 같은 boolean type list 만들기
-//        while (num < surveyList.size) {
-//            boolList.add(false)
-//            num++
-//        }
-//
-//        var index: Int = -1
-//        // usersurveylist 와 겹치는 요소가 있으면 boolean 배열의 해당 인덱스 값을 true로 바꿈
-//        if (doneSurvey != null) {
-//            for (done in doneSurvey) {
-//                index = -1
-//                for (survey in surveyList) {
-//                    index++
-//                    if (survey.id == done.id) {
-//                        boolList[index] = true
-//                    }
-//                }
-//            }
-//        }
-//
-//        return boolList
-//    }
 
 
 }

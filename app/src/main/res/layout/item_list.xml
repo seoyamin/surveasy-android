@@ -27,7 +27,7 @@
             android:paddingStart="10dp"
             android:textAlignment="textStart"
             tools:ignore="RtlCompat"
-            android:paddingVertical="20dp">
+            >
 
             <TextView
                 android:id="@+id/ListItem_Title"

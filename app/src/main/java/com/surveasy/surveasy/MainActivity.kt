@@ -12,6 +12,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
+import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
 import com.amplitude.api.Amplitude
 import com.surveasy.surveasy.databinding.ActivityMainBinding
@@ -40,13 +41,22 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.ListResult
 import com.google.firebase.storage.StorageReference
+import com.kakao.sdk.common.model.ClientError
+import com.kakao.sdk.common.model.ClientErrorCause
+import com.kakao.sdk.user.UserApiClient
+import com.surveasy.surveasy.auth.AuthModel
+import com.surveasy.surveasy.auth.loginWithKakao
+import com.google.gson.internal.bind.util.ISO8601Utils
+import com.kakao.sdk.common.util.Utility
 import com.surveasy.surveasy.home.Opinion.AnswerItem
 import com.surveasy.surveasy.home.Opinion.HomeOpinionAnswerViewModel
 import com.surveasy.surveasy.list.firstsurvey.PushDialogActivity
 import com.surveasy.surveasy.userRoom.User
 import com.surveasy.surveasy.userRoom.UserDatabase
+import kotlinx.coroutines.launch
 import org.json.JSONException
 import org.json.JSONObject
+import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -66,6 +76,7 @@ class MainActivity : AppCompatActivity() {
     val opinionModel by viewModels<HomeOpinionViewModel>()
     val opinionAnswerModel by viewModels<HomeOpinionAnswerViewModel>()
     private lateinit var userDB : UserDatabase
+
     private var age : Int = 0
     private var gender : String = ""
 
@@ -80,13 +91,17 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+//        var keyHash = Utility.getKeyHash(this)
+//        Log.d(TAG, "onCreate: $keyHash")
+
+
         // Initiate Room UserDB
         userDB = Room.databaseBuilder(
             this,
             UserDatabase::class.java, "UserDatabase"
         ).allowMainThreadQueries().build()
 
-        Log.d(TAG, "onCreate: ### ${userDB.userDao().getAll()}")
+        //Log.d(TAG, "onCreate: ${userDB.userDao().getAutoLogin()}")
 
         // 인앱 업데이트 체크
         appUpdateManager = AppUpdateManagerFactory.create(this)
@@ -98,7 +113,7 @@ class MainActivity : AppCompatActivity() {
         fetchContribution()
         fetchOpinion()
 
-
+        
 
         // Current User
         val user = Firebase.auth.currentUser
@@ -200,6 +215,12 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    //카카오 인증 여부
+    private fun fetchAuthInfo(){
+
+    }
+
+
 
     fun clickList() {
         supportFragmentManager.beginTransaction()
@@ -284,6 +305,7 @@ class MainActivity : AppCompatActivity() {
                     snapshot.result["marketingAgree"] as Boolean?,
                     userSurveyList
                 )
+
                 userModel.currentUser = currentUser
 
 
@@ -300,6 +322,28 @@ class MainActivity : AppCompatActivity() {
                     System.err.println("Invalid JSON")
                 }
                 client.setUserProperties(userProperties)
+
+                //카카오 인증 코드
+//                if(snapshot.result["authCode"]==null){
+//                    lifecycleScope.launch {
+//                        try {
+//                            val oAuthToken = this@MainActivity.let { it1 -> UserApiClient.loginWithKakao(context = it1) }
+//                            Log.d(TAG, "onCreateView: %%%%%${oAuthToken?.accessToken}")
+//                            Log.d(TAG, "onCreateView: %%%%%${oAuthToken?.refreshToken}")
+//                            Log.d(TAG, "onCreateView: %%%%%${oAuthToken?.accessTokenExpiresAt}")
+//                            Log.d(TAG, "onCreateView: %%%%%${oAuthToken?.refreshTokenExpiresAt}")
+//                        }catch (error: Throwable) {
+//                            if (error is ClientError && error.reason == ClientErrorCause.Cancelled) {
+//                                Log.d("MainActivity", "사용자가 취소")
+//                            } else {
+//                                Log.e("MainActivity", "인증 에러", error)
+//                            }
+//                        }
+//                    }
+//                }else{
+//                    val code = AuthModel(snapshot.result["authCode"].toString())
+//                    Toast.makeText(this, "인증 완료 계정 $code", Toast.LENGTH_LONG).show()
+//                }
 
 
             }
@@ -460,11 +504,25 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun fetchOpinion() {
+        //query 문으로 수정함. 확인 후 뒤 주석처리 지우기
+        db.collection("AppOpinion").whereEqualTo("isValid", true)
+            .get().addOnCompleteListener{ documents ->
+                val opinion = documents.result.documents[0]
+                opinionModel.opinionItem = OpinionItem(
+                    Integer.parseInt(opinion["id"].toString()),
+                    opinion["question"].toString(),
+                    opinion["content1"].toString(),
+                    opinion["content2"].toString()
+                )
+            }
+
+        /*
         db.collection("AppOpinion").get()
             .addOnSuccessListener { documents ->
                 if(documents != null) {
                     for (document in documents) {
                         if(document["isValid"] as Boolean == true) {
+                            Log.d(TAG, "fetchOpinion: 속도 비교2 ${document["id"].toString()}")
                             opinionModel.opinionItem = OpinionItem(
                                 Integer.parseInt(document["id"].toString()),
                                 document["question"].toString(),
@@ -474,7 +532,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
-            }
+            }*/
         db.collection("AppAnswer").get()
             .addOnSuccessListener { documents ->
                 if(documents != null){

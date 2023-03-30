@@ -11,15 +11,16 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.amplitude.api.Amplitude
-import com.surveasy.surveasy.MainActivity
 
-import com.surveasy.surveasy.R
 import com.surveasy.surveasy.list.*
 import com.surveasy.surveasy.login.*
 import com.surveasy.surveasy.home.Opinion.HomeOpinionDetailActivity
@@ -38,6 +39,13 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.ListResult
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
+import com.kakao.sdk.common.model.ClientError
+import com.kakao.sdk.common.model.ClientErrorCause
+import com.kakao.sdk.user.UserApiClient
+import com.surveasy.surveasy.*
+import com.surveasy.surveasy.auth.AuthDialogActivity
+import com.surveasy.surveasy.auth.AuthProcessActivity
+import com.surveasy.surveasy.auth.loginWithKakao
 import com.surveasy.surveasy.home.Opinion.HomeOpinionAnswerActivity
 import com.surveasy.surveasy.home.Opinion.HomeOpinionAnswerViewModel
 import com.surveasy.surveasy.my.history.MyViewHistoryActivity
@@ -68,6 +76,10 @@ class HomeFragment : Fragment() {
     private val opinionModel by activityViewModels<HomeOpinionViewModel>()
     private val answerModel by activityViewModels<HomeOpinionAnswerViewModel>()
     private val model by activityViewModels<SurveyInfoViewModel>()
+
+    //auth check
+    private lateinit var mainViewModel : MainViewModel
+    private lateinit var mainViewModelFactory: MainViewModelFactory
 
 
     override fun onAttach(context: Context) {
@@ -106,6 +118,20 @@ class HomeFragment : Fragment() {
         val answerLBtn : LinearLayout = view.findViewById(R.id.Home_Opinion_L)
         val answerRBtn : LinearLayout = view.findViewById(R.id.Home_Opinion_R)
 
+        // fetch auth info
+        mainViewModelFactory = MainViewModelFactory(MainRepository())
+        mainViewModel = ViewModelProvider(this, mainViewModelFactory)[MainViewModel::class.java]
+        
+        CoroutineScope(Dispatchers.Main).launch { 
+            mainViewModel.fetchDidAuth(Firebase.auth.uid.toString())
+            mainViewModel.repositories1.observe(viewLifecycleOwner){
+                if(!it.didAuth){
+                    val intent = Intent(context, AuthDialogActivity::class.java)
+                    startActivity(intent)
+                }
+            }
+        }
+
 
         // Banner init
         bannerPager = view.findViewById(R.id.Home_BannerViewPager)
@@ -142,8 +168,10 @@ class HomeFragment : Fragment() {
         }
 
         homeTopBox.setOnClickListener {
+
             val intent = Intent(context, MyViewHistoryActivity::class.java)
             startActivity(intent)
+            
         }
 
 
@@ -152,11 +180,6 @@ class HomeFragment : Fragment() {
             if (userModel.currentUser.didFirstSurvey == false) {
                 (activity as MainActivity).navColor_in_Home()
                 (activity as MainActivity).moreBtn()
-
-//                val intent_surveylistfirstsurvey: Intent =
-//                    Intent(context, FirstSurveyListActivity::class.java)
-//                intent_surveylistfirstsurvey.putExtra("currentUser_main", userModel.currentUser)
-//                startActivity(intent_surveylistfirstsurvey)
 
             } else {
                 (activity as MainActivity).clickList()
@@ -179,6 +202,7 @@ class HomeFragment : Fragment() {
             totalReward.text = "${userModel.currentUser.rewardTotal}원"
         } else {
             if (Firebase.auth.currentUser?.uid != null) {
+                //query 보다 원래 방법이 더 빠름
                 db.collection("panelData")
                     .document(Firebase.auth.currentUser!!.uid)
                     .get().addOnSuccessListener { document ->
@@ -381,6 +405,8 @@ class HomeFragment : Fragment() {
 
 
 
+
+
     //설문 참여, 마감 유무 boolean list
     private fun chooseHomeList() : ArrayList<Boolean>{
 //        val userModel by activityViewModels<CurrentUserViewModel>()
@@ -435,7 +461,7 @@ class HomeFragment : Fragment() {
     //home list에 들어갈 list return 하기
     private fun setHomeList(boolList : ArrayList<Boolean>) : ArrayList<SurveyItems>{
         val finList = arrayListOf<SurveyItems>()
-        val model by activityViewModels<SurveyInfoViewModel>()
+        //val model by activityViewModels<SurveyInfoViewModel>()
         var index = 0
         while(index < model.surveyInfo.size){
             if(!boolList[index]){

@@ -2,6 +2,7 @@ package com.surveasy.surveasy.list
 
 
 import android.content.ContentValues.TAG
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -10,12 +11,18 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.auth.ktx.auth
 import com.surveasy.surveasy.R
 import com.surveasy.surveasy.login.CurrentUserViewModel
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.surveasy.surveasy.MainRepository
+import com.surveasy.surveasy.MainViewModel
+import com.surveasy.surveasy.MainViewModelFactory
+import com.surveasy.surveasy.auth.AuthDialogActivity
 import kotlinx.coroutines.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -29,6 +36,9 @@ class SurveyListFragment() : Fragment() {
     val surveyList = arrayListOf<SurveyItems>()
     val model by activityViewModels<SurveyInfoViewModel>()
     val userModel by activityViewModels<CurrentUserViewModel>()
+    //auth check
+    private lateinit var mainViewModel : MainViewModel
+    private lateinit var mainViewModelFactory: MainViewModelFactory
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -42,13 +52,25 @@ class SurveyListFragment() : Fragment() {
         //val refreshBtn : ImageButton = view.findViewById(R.id.Surveylist_refresh)
         val filterParticipate : Switch = view.findViewById(R.id.Surveylist_FilterParticipate)
         var showCanParticipateList = arrayListOf<Boolean>()
-        val filterList = listOf("최신순","마감순")
-        val filterAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, filterList)
-        val filterSpinner : Spinner = view.findViewById(R.id.Surveylist_FilterSpinner)
+//        val filterList = listOf("최신순","마감순")
+//        val filterAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, filterList)
+//        val filterSpinner : Spinner = view.findViewById(R.id.Surveylist_FilterSpinner)
         var n : Int = 0
 
 
+        // fetch auth info
+        mainViewModelFactory = MainViewModelFactory(MainRepository())
+        mainViewModel = ViewModelProvider(this, mainViewModelFactory)[MainViewModel::class.java]
 
+        CoroutineScope(Dispatchers.Main).launch {
+            mainViewModel.fetchDidAuth(Firebase.auth.uid.toString())
+            mainViewModel.repositories1.observe(viewLifecycleOwner){
+                if(!it.didAuth){
+                    val intent = Intent(context, AuthDialogActivity::class.java)
+                    startActivity(intent)
+                }
+            }
+        }
 
 
         while (n < model.surveyInfo.size) {
@@ -56,42 +78,42 @@ class SurveyListFragment() : Fragment() {
             n++
         }
 
-        filterSpinner.adapter = filterAdapter
-        filterSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                listFilter = filterList[position]
-                if(listFilter.equals("최신순")){
-                    if(filterParticipate.isChecked){
-                        val adapter = SurveyItemsAdapter(model.sortSurveyRecent(), changeDoneSurvey(),changeDoneSurvey())
-                        container?.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
-                        container?.adapter = SurveyItemsAdapter(model.sortSurveyRecent(),changeDoneSurvey(),changeDoneSurvey())
-                    }else{
-                        val adapter = SurveyItemsAdapter(model.sortSurveyRecent(), changeDoneSurvey(),showCanParticipateList)
-                        container?.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
-                        container?.adapter = SurveyItemsAdapter(model.sortSurveyRecent(),changeDoneSurvey(),showCanParticipateList)
-                    }
-
-                }else{
-                    if(filterParticipate.isChecked){
-                        val adapter = SurveyItemsAdapter(model.sortSurvey(), changeDoneSurvey(),changeDoneSurvey())
-                        container?.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
-                        container?.adapter = SurveyItemsAdapter(model.sortSurvey(),changeDoneSurvey(),changeDoneSurvey())
-                    }else{
-                        val adapter = SurveyItemsAdapter(model.sortSurvey(), changeDoneSurvey(),showCanParticipateList)
-                        container?.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
-                        container?.adapter = SurveyItemsAdapter(model.sortSurvey(),changeDoneSurvey(),showCanParticipateList)
-                    }
-                }
-
-            }
-            override fun onNothingSelected(p0: AdapterView<*>?) {
-            }
-        }
+//        filterSpinner.adapter = filterAdapter
+//        filterSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+//            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+//                listFilter = filterList[position]
+//                if(listFilter.equals("최신순")){
+//                    if(filterParticipate.isChecked){
+//                        val adapter = SurveyItemsAdapter(model.sortSurveyRecent(), changeDoneSurvey(),changeDoneSurvey())
+//                        container?.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
+//                        container?.adapter = SurveyItemsAdapter(model.sortSurveyRecent(),changeDoneSurvey(),changeDoneSurvey())
+//                    }else{
+//                        val adapter = SurveyItemsAdapter(model.sortSurveyRecent(), changeDoneSurvey(),showCanParticipateList)
+//                        container?.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
+//                        container?.adapter = SurveyItemsAdapter(model.sortSurveyRecent(),changeDoneSurvey(),showCanParticipateList)
+//                    }
+//
+//                }else{
+//                    if(filterParticipate.isChecked){
+//                        val adapter = SurveyItemsAdapter(model.sortSurvey(), changeDoneSurvey(),changeDoneSurvey())
+//                        container?.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
+//                        container?.adapter = SurveyItemsAdapter(model.sortSurvey(),changeDoneSurvey(),changeDoneSurvey())
+//                    }else{
+//                        val adapter = SurveyItemsAdapter(model.sortSurvey(), changeDoneSurvey(),showCanParticipateList)
+//                        container?.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
+//                        container?.adapter = SurveyItemsAdapter(model.sortSurvey(),changeDoneSurvey(),showCanParticipateList)
+//                    }
+//                }
+//
+//            }
+//            override fun onNothingSelected(p0: AdapterView<*>?) {
+//            }
+//        }
 
 
 
         CoroutineScope(Dispatchers.Main).launch {
-            val model by activityViewModels<SurveyInfoViewModel>()
+            //val model by activityViewModels<SurveyInfoViewModel>()
             getSurveyList(model)
 
             val adapter = SurveyItemsAdapter(model.sortSurveyRecent(), changeDoneSurvey(),showCanParticipateList)
@@ -104,27 +126,14 @@ class SurveyListFragment() : Fragment() {
 
         filterParticipate.setOnCheckedChangeListener{ button, ischecked ->
             if(ischecked){
-                if(listFilter.equals("최신순")){
-                    val adapter = SurveyItemsAdapter(model.sortSurveyRecent(), changeDoneSurvey(),changeDoneSurvey())
-                    container?.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
-                    container?.adapter = SurveyItemsAdapter(model.sortSurveyRecent(),changeDoneSurvey(),changeDoneSurvey())
-                }
-                else{
-                    val adapter = SurveyItemsAdapter(model.sortSurvey(), changeDoneSurvey(),changeDoneSurvey())
-                    container?.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
-                    container?.adapter = SurveyItemsAdapter(model.sortSurvey(),changeDoneSurvey(),changeDoneSurvey())
-                }
+                val adapter = SurveyItemsAdapter(model.sortSurveyRecent(), changeDoneSurvey(),changeDoneSurvey())
+                container?.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
+                container?.adapter = SurveyItemsAdapter(model.sortSurveyRecent(),changeDoneSurvey(),changeDoneSurvey())
 
             }else{
-                if(listFilter.equals("최신순")){
-                    val adapter = SurveyItemsAdapter(model.sortSurveyRecent(), changeDoneSurvey(),showCanParticipateList)
-                    container?.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
-                    container?.adapter = SurveyItemsAdapter(model.sortSurveyRecent(),changeDoneSurvey(),showCanParticipateList)
-                }else{
-                    val adapter = SurveyItemsAdapter(model.sortSurvey(), changeDoneSurvey(),showCanParticipateList)
-                    container?.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
-                    container?.adapter = SurveyItemsAdapter(model.sortSurvey(),changeDoneSurvey(),showCanParticipateList)
-                }
+                val adapter = SurveyItemsAdapter(model.sortSurveyRecent(), changeDoneSurvey(),showCanParticipateList)
+                container?.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
+                container?.adapter = SurveyItemsAdapter(model.sortSurveyRecent(),changeDoneSurvey(),showCanParticipateList)
 
             }
         }

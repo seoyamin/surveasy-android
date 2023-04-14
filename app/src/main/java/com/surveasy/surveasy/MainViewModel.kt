@@ -37,11 +37,13 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
     private val _repositoriesFetchSurvey = MutableLiveData<ArrayList<SurveyModel>>()
     val repositories6 : MutableLiveData<ArrayList<SurveyModel>>
         get() = _repositoriesFetchSurvey
+    private val _repositoriesFetchSurveyForHome = MutableLiveData<ArrayList<SurveyModel>>()
+    val repositories7 : MutableLiveData<ArrayList<SurveyModel>>
+        get() = _repositoriesFetchSurveyForHome
 
     private val db = Firebase.firestore
 
     //mainActivity fetch currentUser
-    var currentUserModel = CurrentUser()
 
     init {
         Log.d(TAG, ": MainViewMode init")

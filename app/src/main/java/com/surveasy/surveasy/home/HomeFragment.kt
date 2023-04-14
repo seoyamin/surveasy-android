@@ -10,15 +10,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
-import com.amplitude.api.Amplitude
 
 import com.surveasy.surveasy.list.*
 import com.surveasy.surveasy.login.*
@@ -28,9 +25,7 @@ import com.surveasy.surveasy.home.banner.BannerViewModel
 import com.surveasy.surveasy.home.banner.BannerViewPagerAdapter
 import com.surveasy.surveasy.home.contribution.ContributionItemsAdapter
 import com.surveasy.surveasy.home.contribution.HomeContributionViewModel
-import com.bumptech.glide.Glide
 import com.google.android.gms.tasks.Task
-import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -45,8 +40,6 @@ import com.surveasy.surveasy.home.Opinion.HomeOpinionAnswerViewModel
 import com.surveasy.surveasy.model.SurveyModel
 import com.surveasy.surveasy.my.history.MyViewHistoryActivity
 import kotlinx.coroutines.*
-import org.json.JSONException
-import org.json.JSONObject
 import java.lang.Runnable
 import java.text.SimpleDateFormat
 import java.util.*
@@ -55,7 +48,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 
 
 class HomeFragment : Fragment() {
@@ -73,6 +65,8 @@ class HomeFragment : Fragment() {
     private val opinionModel by activityViewModels<HomeOpinionViewModel>()
     private val answerModel by activityViewModels<HomeOpinionAnswerViewModel>()
     private val model by activityViewModels<SurveyInfoViewModel>()
+    private val mainDataViewModel by activityViewModels<MainDataViewModel>()
+    private var homeSurveyList = kotlin.collections.ArrayList<SurveyModel>()
 
     private lateinit var mainViewModel: MainViewModel
     private lateinit var mainViewModelFactory : MainViewModelFactory
@@ -102,41 +96,29 @@ class HomeFragment : Fragment() {
         CoroutineScope(Dispatchers.Main).launch {
 
             //user info fetch
-            mainViewModel.fetchCurrentUser(Firebase.auth.currentUser!!.uid)
-            mainViewModel.repositories1.observe(viewLifecycleOwner){
-                Log.d(TAG, "onCreate: fragment###${it.name}")
-                Log.d(TAG, "onCreateView: @@@@@@@@@${Firebase.auth.uid} **** ${it.name}")
-                binding.HomeGreetingText.text = "안녕하세요, ${it.name}님!"
-                if(it.UserSurveyList == null){
-                    binding.HomeSurveyNum.text = "0개"
-                }else{
-                    binding.HomeSurveyNum.text = "${it.UserSurveyList!!.size}개"
-                }
-                binding.HomeRewardAmount.text = "${it.rewardTotal}원"
-
+            fetchUserData()
+            val currentUser = mainDataViewModel.currentUserModel[0]
+            binding.HomeGreetingText.text = "안녕하세요, ${currentUser.name}님!"
+            if(currentUser.UserSurveyList == null){
+                binding.HomeSurveyNum.text = "0개"
+            }else{
+                binding.HomeSurveyNum.text = "${currentUser.UserSurveyList!!.size}개"
+            }
+            binding.HomeRewardAmount.text = "${currentUser.rewardTotal}원"
+            mainViewModel.fetchSurvey(20, "여")
+            mainViewModel.repositories6.observe(viewLifecycleOwner){
                 //home list
-                if (it.didFirstSurvey == false) {
+                if (currentUser.didFirstSurvey == false) {
                     binding.HomeListItemContainerFirst.visibility= View.VISIBLE
                     binding.homeListText.visibility = View.GONE
                     binding.homeListRecyclerView.visibility = View.GONE
-                    binding.HomeListItemTitleFirst.text = "${it.name}님에 대해 알려주세요!"
-
-//                    if (it.uid != null) {
-//                    }
-//                    else {
-//                        if (Firebase.auth.currentUser?.uid != null) {
-//                            db.collection("panelData")
-//                                .document(Firebase.auth.currentUser!!.uid)
-//                                .get().addOnSuccessListener { document ->
-//                                    binding.HomeListItemTitleFirst.text = "${document["name"].toString()}님에 대해 알려주세요!"
-//                                }
-//                        }
-//                    }
+                    binding.HomeListItemTitleFirst.text = "${currentUser.name}님에 대해 알려주세요!"
 
                 }
 
-                else if(it.didFirstSurvey == true) {
-                    if (setHomeList(chooseHomeList(it)).size == 0) {
+                else if(currentUser.didFirstSurvey == true) {
+                    if (setHomeList(chooseHomeList()).size == 0) {
+                        Log.d(TAG, "onCreateView: 불러오기 전")
                         binding.HomeListItemContainerFirst.visibility= View.GONE
                         binding.homeListRecyclerView.visibility = View.GONE
 
@@ -148,16 +130,18 @@ class HomeFragment : Fragment() {
                         binding.HomeListItemContainerFirst.visibility= View.GONE
                         binding.homeListText.visibility = View.GONE
                         binding.homeListRecyclerView.visibility = View.VISIBLE
-                        val adapter = HomeListItemsAdapter(setHomeList(chooseHomeList(it)))
+                        val adapter = HomeListItemsAdapter(setHomeList(chooseHomeList()))
                         container?.layoutManager = LinearLayoutManager(
                             context,
                             LinearLayoutManager.VERTICAL, false
                         )
-                        container?.adapter = HomeListItemsAdapter(setHomeList(chooseHomeList(it)))
+                        container?.adapter = HomeListItemsAdapter(setHomeList(chooseHomeList()))
                     }
 
                 }
             }
+
+
 
             //banner fetch
             mainViewModel.fetchBannerImg()
@@ -382,89 +366,134 @@ class HomeFragment : Fragment() {
         _binding = null
     }
 
+    private suspend fun fetchUserData(){
+        CoroutineScope(Dispatchers.Main).async {
+            val t = withContext(Dispatchers.IO){
+                while(mainDataViewModel.currentUserModel.size==0){}
+                1
+            }
+        }.await()
+    }
 
+    /*
+    private fun chooseHomeList() : ArrayList<Boolean>{
+//        val userModel by activityViewModels<CurrentUserViewModel>()
+//        val model by activityViewModels<SurveyInfoViewModel>()
+        val doneSurvey = userModel.currentUser.UserSurveyList
+        var boolList = ArrayList<Boolean>(model.sortSurvey().size)
+        var num: Int = 0
 
+        //survey list item 크기와 같은 boolean type list 만들기. 모두 false 로
+        while (num < model.surveyInfo.size) {
+            boolList.add(false)
+            num++
+        }
 
-    //설문 참여, 마감 유무 boolean list
-    private fun chooseHomeList(currentUser : CurrentUser) : ArrayList<Boolean>{
-        Log.d(TAG, "chooseHomeList: chose home list")
-        val doneSurvey = currentUser.UserSurveyList
-        var boolList = ArrayList<Boolean>()
-        CoroutineScope(Dispatchers.Main).launch {
-            mainViewModel.fetchSurvey(20, "여")
-            mainViewModel.repositories6.observe(viewLifecycleOwner){
-                Log.d(TAG, "chooseHomeList: &&&&&$it")
-                boolList = ArrayList(sortSurvey(it).size)
-                var num: Int = 0
-                //survey list item 크기와 같은 boolean type list 만들기. 모두 false 로
-                while (num < it.size) {
-                    boolList.add(false)
-                    num++
-                }
+        var index: Int = -1
 
-                var index: Int = -1
-
-                // userSurveyList 와 겹치는 요소가 있으면 boolean 배열의 해당 인덱스 값을 true로 바꿈
-                if (doneSurvey?.size != 0) {
-                    if (doneSurvey != null) {
-                        for (done in doneSurvey) {
-                            index = -1
-                            for (survey in it) {
-                                index++
-                                //homelist 마감 체크
-                                val dueDate = survey.dueDate + " " + survey.dueTimeTime + ":00"
-                                val sf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-                                val date = sf.parse(dueDate)
-                                val now = Calendar.getInstance()
-                                val calDate = (date.time - now.time.time) / (60 * 60 * 1000)
-
-                                if(calDate<0){
-                                    boolList[index] = true
-                                }
-                                if (survey.id.equals(done.id)) {
-                                    boolList[index] = true
-                                }else if(survey.progress >=3){
-                                    boolList[index] = true
-                                }
-                            }
-                        }
-                    }
-                }else{
+        // userSurveyList 와 겹치는 요소가 있으면 boolean 배열의 해당 인덱스 값을 true로 바꿈
+        if (doneSurvey?.size != 0) {
+            if (doneSurvey != null) {
+                for (done in doneSurvey) {
                     index = -1
-                    for(survey in it){
+                    for (survey in model.surveyInfo) {
                         index++
-                        boolList[index] = survey.progress>=3
+                        //homelist 마감 체크
+                        val dueDate = survey.dueDate + " " + survey.dueTimeTime + ":00"
+                        val sf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                        val date = sf.parse(dueDate)
+                        val now = Calendar.getInstance()
+                        val calDate = (date.time - now.time.time) / (60 * 60 * 1000)
+
+                        if(calDate<0){
+                            boolList[index] = true
+                        }
+                        if (survey.id.equals(done.id)) {
+                            boolList[index] = true
+                        }else if(survey.progress >=3){
+                            boolList[index] = true
+                        }
                     }
                 }
             }
+        }else{
+            index = -1
+            for(survey in model.surveyInfo){
+                index++
+                boolList[index] = survey.progress>=3
+            }
+        }
+        return boolList
+    }
+     */
+
+
+    //설문 참여, 마감 유무 boolean list
+    private fun chooseHomeList() : ArrayList<Boolean>{
+//        val userModel by activityViewModels<CurrentUserViewModel>()
+//        val model by activityViewModels<SurveyInfoViewModel>()
+
+        val doneSurvey = mainDataViewModel.currentUserModel[0].UserSurveyList
+        var boolList = ArrayList<Boolean>(model.sortSurvey().size)
+        var num: Int = 0
+
+        //survey list item 크기와 같은 boolean type list 만들기. 모두 false 로
+        while (num < model.surveyInfo.size) {
+            boolList.add(false)
+            num++
         }
 
+        var index: Int = -1
+        // 여기서 model 을 새로 fetch 할 것인지를 체크하고 해야됨.
+        // userSurveyList 와 겹치는 요소가 있으면 boolean 배열의 해당 인덱스 값을 true로 바꿈
+        if (doneSurvey?.size != 0) {
+            if (doneSurvey != null) {
+                for (done in doneSurvey) {
+                    index = -1
+                    for (survey in model.surveyInfo) {
+                        index++
+                        //homelist 마감 체크
+                        val dueDate = survey.dueDate + " " + survey.dueTimeTime + ":00"
+                        val sf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                        val date = sf.parse(dueDate)
+                        val now = Calendar.getInstance()
+                        val calDate = (date.time - now.time.time) / (60 * 60 * 1000)
 
+                        if(calDate<0){
+                            boolList[index] = true
+                        }
+                        if (survey.id.equals(done.id)) {
+                            boolList[index] = true
+                        }else if(survey.progress >=3){
+                            boolList[index] = true
+                        }
+                    }
+                }
+            }
+        }else{
+            index = -1
+            for(survey in model.surveyInfo){
+                index++
+                boolList[index] = survey.progress>=3
+            }
+        }
         return boolList
     }
 
     //home list에 들어갈 list return 하기
     private fun setHomeList(boolList : ArrayList<Boolean>) : ArrayList<SurveyModel>{
-        Log.d(TAG, "setHomeList: set home list")
         val finList = arrayListOf<SurveyModel>()
         //val model by activityViewModels<SurveyInfoViewModel>()
-        CoroutineScope(Dispatchers.Main).launch {
-            mainViewModel.fetchSurvey(20, "여")
-            mainViewModel.repositories6.observe(viewLifecycleOwner){
-                var index = 0
-                // 설문 하나 추가됐을 때 확인해보기
-                while(index < it.size && it.size==0){
-                    if(!boolList[index]){
-                        finList.add(sortSurvey(it).get(index))
-                        index+=1
-                    }else{
-                        index+=1
-                    }
-
-                }
+        var index = 0
+        while(index < model.surveyInfo.size){
+            if(!boolList[index]){
+                finList.add(sortSurvey(model.surveyInfo).get(index))
+                index+=1
+            }else{
+                index+=1
             }
-        }
 
+        }
         return finList
     }
     private fun sortSurvey(surveyList : kotlin.collections.ArrayList<SurveyModel>) : ArrayList<SurveyModel>{

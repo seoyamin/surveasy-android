@@ -159,6 +159,104 @@ class MainRepository : MainRepositoryInterface {
             }
     }
 
+    //fetch home list (NOT YET)
+    override suspend fun fetchSurveyForHome(
+        model: MutableLiveData<ArrayList<SurveyModel>>,
+        userAge: Int,
+        userGender: String,
+        uid : String
+    ) {
+        var surveyList = ArrayList<SurveyModel>()
+        val docRef = db.collection("panelData").document(uid.toString())
+
+        db.collection("surveyData")
+            .orderBy("lastIDChecked", Query.Direction.DESCENDING)
+            .limit(10).get()
+            .addOnSuccessListener { result ->
+                for (document in result) {
+
+                    // [case 1] 타겟팅 추가 이후 설문
+                    if(document["targetingAge"] != null && document["targetingGender"] != null) {
+                        val targetingAge = Integer.parseInt(document["targetingAge"].toString()) as Int
+                        val targetingGender = Integer.parseInt(document["targetingGender"].toString()) as Int
+
+                        if(checkTargeting(userAge, userGender, targetingAge, targetingGender)) {
+                            if(document["panelReward"] != null) {
+                                val item = SurveyModel(
+                                    Integer.parseInt(document["id"].toString()) as Int,
+                                    Integer.parseInt(document["lastIDChecked"].toString()) as Int,
+                                    document["title"] as String,
+                                    document["target"] as String,
+                                    document["uploadDate"] as String?,
+                                    document["link"] as String?,
+                                    document["spendTime"] as String?,
+                                    document["dueDate"] as String?,
+                                    document["dueTimeTime"] as String?,
+                                    Integer.parseInt(document["panelReward"].toString()),
+                                    document["noticeToPanel"] as String?,
+                                    Integer.parseInt(document["progress"].toString()),
+                                    Integer.parseInt(document["targetingAge"].toString()) as Int,
+                                    Integer.parseInt(document["targetingGender"].toString()) as Int,
+                                )
+                                surveyList.add(item)
+                            }
+                        }
+
+
+                    }
+
+                    // [case 2] 타겟팅 추가 이전 설문
+                    else {
+                        if(document["panelReward"] != null) {
+                            val item = SurveyModel(
+                                Integer.parseInt(document["id"].toString()) as Int,
+                                Integer.parseInt(document["lastIDChecked"].toString()) as Int,
+                                document["title"] as String,
+                                document["target"] as String,
+                                document["uploadDate"] as String?,
+                                document["link"] as String?,
+                                document["spendTime"] as String?,
+                                document["dueDate"] as String?,
+                                document["dueTimeTime"] as String?,
+                                Integer.parseInt(document["panelReward"].toString()),
+                                document["noticeToPanel"] as String?,
+                                Integer.parseInt(document["progress"].toString()),
+                                1,
+                                1
+                            )
+                            surveyList.add(item)
+                        }
+                    }
+
+                }
+                val userSurveyList = ArrayList<UserSurveyItem>()
+
+                docRef.collection("UserSurveyList").get()
+                    .addOnSuccessListener { documents ->
+                        for(document in documents){
+                            var item : UserSurveyItem = UserSurveyItem(
+                                Integer.parseInt(document["id"].toString()),
+                                Integer.parseInt(document["lastIDChecked"].toString()),
+                                document["title"] as String?,
+                                Integer.parseInt(document["panelReward"].toString()) as Int?,
+                                document["responseDate"] as String?,
+                                document["isSent"] as Boolean?,
+                                null
+                            )
+                            userSurveyList.add(item)
+
+                        }
+
+
+                    }
+
+
+            }
+            .addOnFailureListener { exception ->
+                Log.d(TAG, "fail $exception")
+            }
+    }
+
     private fun checkTargeting(userAge : Int, userGender : String, targetingAge : Int, targetingGender : Int) : Boolean {
 
         // [case 1] 타겟팅 없는 설문

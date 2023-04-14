@@ -3,7 +3,6 @@ package com.surveasy.surveasy
 import android.content.ContentValues.TAG
 import android.content.Intent
 import android.graphics.Color
-import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -11,7 +10,6 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import androidx.room.Room
 import com.amplitude.api.Amplitude
@@ -34,29 +32,22 @@ import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.UpdateAvailability
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.ListResult
 import com.google.firebase.storage.StorageReference
-import com.google.gson.internal.bind.util.ISO8601Utils
 import com.surveasy.surveasy.home.Opinion.AnswerItem
 import com.surveasy.surveasy.home.Opinion.HomeOpinionAnswerViewModel
 import com.surveasy.surveasy.list.firstsurvey.PushDialogActivity
 import com.surveasy.surveasy.userRoom.User
-import com.surveasy.surveasy.userRoom.UserDao
 import com.surveasy.surveasy.userRoom.UserDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONException
 import org.json.JSONObject
-import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -73,6 +64,7 @@ class MainActivity : AppCompatActivity() {
     val contributionModel by viewModels<HomeContributionViewModel>()
     val opinionModel by viewModels<HomeOpinionViewModel>()
     val opinionAnswerModel by viewModels<HomeOpinionAnswerViewModel>()
+    private val mainDataViewModel by viewModels<MainDataViewModel>()
     
     private lateinit var mainViewModel: MainViewModel
     private lateinit var mainViewModelFactory : MainViewModelFactory
@@ -117,10 +109,10 @@ class MainActivity : AppCompatActivity() {
             mainViewModel.fetchCurrentUser(Firebase.auth.currentUser!!.uid)
             mainViewModel.repositories1.observe(this@MainActivity){
                 //viewModel 에 user 객체 저장
-//                val currentUser = CurrentUser(it.uid, it.fcmToken, it.name, it.email, it.phoneNumber, it.gender, it.birthDate,
-//                it.accountType, it.accountNumber, it.accountOwner, it.inflowPath, it.didFirstSurvey,
-//                    it.autoLogin, it.rewardCurrent, it.rewardTotal, it.marketingAgree, it.UserSurveyList)
-//                mainViewModel.currentUserModel = currentUser
+                val currentUser = CurrentUser(it.uid, it.fcmToken, it.name, it.email, it.phoneNumber, it.gender, it.birthDate,
+                    it.accountType, it.accountNumber, it.accountOwner, it.inflowPath, it.didFirstSurvey,
+                    it.autoLogin, it.rewardCurrent, it.rewardTotal, it.marketingAgree, it.UserSurveyList)
+                mainDataViewModel.currentUserModel.add(currentUser)
 
                 // Local Room DB에 current user의 User 객체 저장하기
                 val uidNum = userDB.userDao().getNumUid(it.uid.toString())
@@ -387,83 +379,83 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    fun fetchSurvey() {
-
-        // [Targeting] Room DB에서 User info 가져오기
-        val birthYear = userDB.userDao().getBirth()
-            val currentYear = Calendar.getInstance().get(Calendar.YEAR)
-            age = currentYear - birthYear + 1
-        gender = userDB.userDao().getGender()
-
-
-        // Fetch from FB
-        db.collection("surveyData")
-            .orderBy("lastIDChecked", Query.Direction.DESCENDING)
-            .limit(18).get()
-            .addOnSuccessListener { result ->
-                for (document in result) {
-
-                    // [case 1] 타겟팅 추가 이후 설문
-                    if(document["targetingAge"] != null && document["targetingGender"] != null) {
-                        val targetingAge = Integer.parseInt(document["targetingAge"].toString()) as Int
-                        val targetingGender = Integer.parseInt(document["targetingGender"].toString()) as Int
-
-                        if(checkTargeting(targetingAge, targetingGender)) {
-                            if(document["panelReward"] != null) {
-                                val item: SurveyItems = SurveyItems(
-                                    Integer.parseInt(document["id"].toString()) as Int,
-                                    Integer.parseInt(document["lastIDChecked"].toString()) as Int,
-                                    document["title"] as String,
-                                    document["target"] as String,
-                                    document["uploadDate"] as String?,
-                                    document["link"] as String?,
-                                    document["spendTime"] as String?,
-                                    document["dueDate"] as String?,
-                                    document["dueTimeTime"] as String?,
-                                    Integer.parseInt(document["panelReward"].toString()),
-                                    document["noticeToPanel"] as String?,
-                                    Integer.parseInt(document["progress"].toString()),
-                                    Integer.parseInt(document["targetingAge"].toString()) as Int,
-                                    Integer.parseInt(document["targetingGender"].toString()) as Int,
-                                )
-                                surveyList.add(item)
-                            }
-                        }
-
-
-                    }
-
-                    // [case 2] 타겟팅 추가 이전 설문
-                    else {
-                        if(document["panelReward"] != null) {
-                            val item: SurveyItems = SurveyItems(
-                                Integer.parseInt(document["id"].toString()) as Int,
-                                Integer.parseInt(document["lastIDChecked"].toString()) as Int,
-                                document["title"] as String,
-                                document["target"] as String,
-                                document["uploadDate"] as String?,
-                                document["link"] as String?,
-                                document["spendTime"] as String?,
-                                document["dueDate"] as String?,
-                                document["dueTimeTime"] as String?,
-                                Integer.parseInt(document["panelReward"].toString()),
-                                document["noticeToPanel"] as String?,
-                                Integer.parseInt(document["progress"].toString()),
-                                1,
-                                1
-                            )
-                            surveyList.add(item)
-                        }
-                    }
-
-                }
-
-                model.surveyInfo.addAll(surveyList)
-            }
-            .addOnFailureListener { exception ->
-                Log.d(TAG, "fail $exception")
-            }
-    }
+//    fun fetchSurvey() {
+//
+//        // [Targeting] Room DB에서 User info 가져오기
+//        val birthYear = userDB.userDao().getBirth()
+//            val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+//            age = currentYear - birthYear + 1
+//        gender = userDB.userDao().getGender()
+//
+//
+//        // Fetch from FB
+//        db.collection("surveyData")
+//            .orderBy("lastIDChecked", Query.Direction.DESCENDING)
+//            .limit(18).get()
+//            .addOnSuccessListener { result ->
+//                for (document in result) {
+//
+//                    // [case 1] 타겟팅 추가 이후 설문
+//                    if(document["targetingAge"] != null && document["targetingGender"] != null) {
+//                        val targetingAge = Integer.parseInt(document["targetingAge"].toString()) as Int
+//                        val targetingGender = Integer.parseInt(document["targetingGender"].toString()) as Int
+//
+//                        if(checkTargeting(targetingAge, targetingGender)) {
+//                            if(document["panelReward"] != null) {
+//                                val item: SurveyItems = SurveyItems(
+//                                    Integer.parseInt(document["id"].toString()) as Int,
+//                                    Integer.parseInt(document["lastIDChecked"].toString()) as Int,
+//                                    document["title"] as String,
+//                                    document["target"] as String,
+//                                    document["uploadDate"] as String?,
+//                                    document["link"] as String?,
+//                                    document["spendTime"] as String?,
+//                                    document["dueDate"] as String?,
+//                                    document["dueTimeTime"] as String?,
+//                                    Integer.parseInt(document["panelReward"].toString()),
+//                                    document["noticeToPanel"] as String?,
+//                                    Integer.parseInt(document["progress"].toString()),
+//                                    Integer.parseInt(document["targetingAge"].toString()) as Int,
+//                                    Integer.parseInt(document["targetingGender"].toString()) as Int,
+//                                )
+//                                surveyList.add(item)
+//                            }
+//                        }
+//
+//
+//                    }
+//
+//                    // [case 2] 타겟팅 추가 이전 설문
+//                    else {
+//                        if(document["panelReward"] != null) {
+//                            val item: SurveyItems = SurveyItems(
+//                                Integer.parseInt(document["id"].toString()) as Int,
+//                                Integer.parseInt(document["lastIDChecked"].toString()) as Int,
+//                                document["title"] as String,
+//                                document["target"] as String,
+//                                document["uploadDate"] as String?,
+//                                document["link"] as String?,
+//                                document["spendTime"] as String?,
+//                                document["dueDate"] as String?,
+//                                document["dueTimeTime"] as String?,
+//                                Integer.parseInt(document["panelReward"].toString()),
+//                                document["noticeToPanel"] as String?,
+//                                Integer.parseInt(document["progress"].toString()),
+//                                1,
+//                                1
+//                            )
+//                            surveyList.add(item)
+//                        }
+//                    }
+//
+//                }
+//
+//                model.surveyInfo.addAll(surveyList)
+//            }
+//            .addOnFailureListener { exception ->
+//                Log.d(TAG, "fail $exception")
+//            }
+//    }
 
 
 

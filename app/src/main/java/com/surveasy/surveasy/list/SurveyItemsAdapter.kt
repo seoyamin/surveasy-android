@@ -12,12 +12,13 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.surveasy.surveasy.R
+import com.surveasy.surveasy.model.SurveyModel
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
 
-class SurveyItemsAdapter(val surveyList: ArrayList<SurveyItems>, val boolList: ArrayList<Boolean>, val showCanParticipateList : ArrayList<Boolean>)
+class SurveyItemsAdapter(val surveyList: ArrayList<SurveyModel>, val boolList: ArrayList<Boolean>, val showCanParticipateList : ArrayList<Boolean>)
     : RecyclerView.Adapter<SurveyItemsAdapter.CustomViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CustomViewHolder {
@@ -94,7 +95,7 @@ class SurveyItemsAdapter(val surveyList: ArrayList<SurveyItems>, val boolList: A
 
         if(!showCanParticipateList.contains(true)){
             if(boolList[position]){
-                holder.itemContainer.setBackgroundResource(R.drawable.custom_donbox)
+                holder.itemContainer.setBackgroundResource(R.drawable.custom_box_done)
 
             }
         }else{

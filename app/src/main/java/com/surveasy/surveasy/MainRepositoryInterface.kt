@@ -16,6 +16,7 @@ interface MainRepositoryInterface {
     //fetchCurrentUser
     suspend fun fetchCurrentUser(uid : String, model : MutableLiveData<CurrentUser>)
     suspend fun fetchSurvey(model : MutableLiveData<ArrayList<SurveyModel>>, userAge: Int, userGender: String)
+    suspend fun fetchSurveyForHome(model : MutableLiveData<ArrayList<SurveyModel>>, userAge: Int, userGender: String, uid : String)
     fun setAmplitude(model : CurrentUser)
     suspend fun fetchBannerImg(model : MutableLiveData<ArrayList<String>>)
     suspend fun fetchContribution(model : MutableLiveData<ArrayList<ContributionModel>>)

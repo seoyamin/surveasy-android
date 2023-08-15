@@ -113,7 +113,6 @@ class HomeFragment : Fragment() {
                     binding.homeListText.visibility = View.GONE
                     binding.homeListRecyclerView.visibility = View.GONE
                     binding.HomeListItemTitleFirst.text = "${currentUser.name}님에 대해 알려주세요!"
-
                 }
 
                 else if(currentUser.didFirstSurvey == true) {

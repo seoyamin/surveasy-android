@@ -41,6 +41,10 @@ import com.google.firebase.storage.StorageReference
 import com.surveasy.surveasy.home.Opinion.AnswerItem
 import com.surveasy.surveasy.home.Opinion.HomeOpinionAnswerViewModel
 import com.surveasy.surveasy.list.firstsurvey.PushDialogActivity
+import com.surveasy.surveasy.retrofit.PostTestDto
+import com.surveasy.surveasy.retrofit.Repository
+import com.surveasy.surveasy.retrofit.ServiceViewModel
+import com.surveasy.surveasy.retrofit.ServiceViewModelFactory
 import com.surveasy.surveasy.userRoom.User
 import com.surveasy.surveasy.userRoom.UserDatabase
 import kotlinx.coroutines.CoroutineScope
@@ -68,6 +72,9 @@ class MainActivity : AppCompatActivity() {
     
     private lateinit var mainViewModel: MainViewModel
     private lateinit var mainViewModelFactory : MainViewModelFactory
+
+    private lateinit var mainViewM: ServiceViewModel
+    private lateinit var mainViewModelF : ServiceViewModelFactory
 
     
     private lateinit var userDB : UserDatabase
@@ -100,6 +107,24 @@ class MainActivity : AppCompatActivity() {
         //fetchSurvey()
         //fetchContribution()
         //fetchOpinion()
+
+        // api test
+        mainViewModelF = ServiceViewModelFactory(Repository())
+        mainViewM = ViewModelProvider(this, mainViewModelF)[ServiceViewModel::class.java]
+
+        CoroutineScope(Dispatchers.Main).launch {
+            val body = PostTestDto(
+                true, "name", "2023-01-10", "기관", "https://", "notice", 300, 3000,
+                "student", 30, "1-2", "student", 3, 2, "list",
+                1, "list", "title"
+            )
+            mainViewM.postTest(body)
+            mainViewM.repositories1.observe(this@MainActivity){
+                Log.d(TAG, "%%%%%%%%%%%onCreate: $it")
+            }
+        }
+
+
 
         mainViewModelFactory = MainViewModelFactory(MainRepository())
         mainViewModel = ViewModelProvider(this, mainViewModelFactory)[MainViewModel::class.java]

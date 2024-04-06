@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import type="android.view.View" />
+
+        <variable
+            name="vm"
+            type="com.surveasy.surveasy.presentation.main.list.ListViewModel" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/white"
+        tools:context=".presentation.main.list.ListFragment">
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guide_top"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_begin="50dp" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guide_end"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_end="20dp" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guide_begin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_begin="20dp" />
+
+        <TextView
+            android:id="@+id/tv_list_title"
+            style="@style/TextMediumBold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/list_label"
+            android:textColor="@color/black"
+            app:layout_constraintStart_toStartOf="@id/guide_begin"
+            app:layout_constraintTop_toTopOf="@id/guide_top" />
+
+        <ImageView
+            android:id="@+id/iv_blur"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/ic_list_blur"
+            android:scaleType="fitCenter"
+            android:visibility="@{vm.uiState.didFirstSurvey? View.GONE : View.VISIBLE}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tv_info"
+            style="@style/TextTitleBold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:lineSpacingExtra="1.9dp"
+            android:text="@string/fs_info_label"
+            android:visibility="@{vm.uiState.didFirstSurvey? View.GONE : View.VISIBLE}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btn_start"
+            style="@style/TextTitleBold"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:background="@drawable/white_button"
+            android:onClick="@{() -> vm.navigateToFs()}"
+            android:text="@string/btn_go"
+            android:textColor="@color/main_green"
+            app:layout_constraintEnd_toEndOf="@id/tv_info"
+            app:layout_constraintStart_toStartOf="@id/tv_info"
+            app:layout_constraintTop_toBottomOf="@id/tv_info" />
+
+        <ImageView
+            android:id="@+id/iv_loading"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/ic_loading"
+            android:visibility="@{vm.uiState.loading? View.VISIBLE : View.GONE}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_list"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="40dp"
+            android:orientation="vertical"
+            android:visibility="@{vm.uiState.didFirstSurvey? View.VISIBLE : View.GONE}"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@id/guide_end"
+            app:layout_constraintStart_toStartOf="@id/guide_begin"
+            app:layout_constraintTop_toBottomOf="@id/tv_list_title"
+            app:list="@{vm.uiState.list}"
+            tools:listitem="@layout/item_list_ongoing" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

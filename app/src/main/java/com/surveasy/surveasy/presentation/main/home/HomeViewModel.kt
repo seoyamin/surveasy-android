@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.surveasy.surveasy.app.DataStoreManager
 import com.surveasy.surveasy.domain.base.BaseState
+import com.surveasy.surveasy.domain.usecase.GetFcmTokenUseCase
 import com.surveasy.surveasy.domain.usecase.ListHomeSurveyUseCase
 import com.surveasy.surveasy.domain.usecase.QueryPanelInfoUseCase
 import com.surveasy.surveasy.presentation.main.home.mapper.toUiHomeListData
@@ -30,6 +31,7 @@ class HomeViewModel @Inject constructor(
     private val queryPanelInfoUseCase: QueryPanelInfoUseCase,
     private val listHomeSurveyUseCase: ListHomeSurveyUseCase,
     private val dataStoreManager: DataStoreManager,
+    private val getFcmTokenUseCase: GetFcmTokenUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -87,6 +89,14 @@ class HomeViewModel @Inject constructor(
             }
         }.launchIn(viewModelScope)
     }
+
+//    suspend fun getFcmToken() {
+//        val fcmToken = viewModelScope.async {
+//            getFcmTokenUseCase()
+//        }.await()
+//
+//        Log.d("TAG", "getFcmToken: $fcmToken")
+//    }
 
     fun navigateToSurveyDetail(id: Int) {
         viewModelScope.launch { _events.emit(HomeEvents.ClickSurveyItem(id)) }
